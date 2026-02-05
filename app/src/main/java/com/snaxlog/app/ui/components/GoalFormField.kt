@@ -52,8 +52,8 @@ fun GoalFormField(
                 .fillMaxWidth()
                 .semantics {
                     contentDescription = fieldDescription
-                    if (isError && errorMessage != null) {
-                        error(errorMessage)
+                    if (isError) {
+                        error(errorMessage!!)
                     }
                 },
             colors = OutlinedTextFieldDefaults.colors(
@@ -64,9 +64,9 @@ fun GoalFormField(
             )
         )
 
-        if (isError && errorMessage != null) {
+        if (isError) {
             Text(
-                text = errorMessage,
+                text = errorMessage!!,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(start = Spacing.base, top = Spacing.xs)
