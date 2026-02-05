@@ -13,13 +13,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -29,7 +26,45 @@ import javax.inject.Inject
 import kotlin.math.roundToInt
 
 /**
+ * Represents the progress state for a single nutrient (calories or macro).
+ * Used to drive visual progress indicators per US-012.
+ *
+ * @param consumed The amount consumed.
+ * @param goal The goal amount, null if no goal is set.
+ * @param progress The progress as a float (0.0 = 0%, 1.0 = 100%), null if no goal.
+ * @param remaining The remaining amount to reach the goal, null if no goal.
+ * @param progressLevel The categorized progress level for UI theming.
+ */
+data class NutrientProgress(
+    val consumed: Double = 0.0,
+    val goal: Double? = null,
+    val progress: Float? = null,
+    val remaining: Double? = null,
+    val progressLevel: ProgressLevel = ProgressLevel.NORMAL
+)
+
+/**
+ * Categorizes progress into levels that drive visual theming (C-004 ProgressBar variants).
+ * - NORMAL: 0-89% of goal -> success (green)
+ * - APPROACHING: 90-100% of goal -> warning (orange)
+ * - EXCEEDED: 100%+ of goal -> error (red)
+ * - NO_GOAL: No goal set -> no progress indicator
+ */
+enum class ProgressLevel {
+    NORMAL,
+    APPROACHING,
+    EXCEEDED,
+    NO_GOAL
+}
+
+/**
  * UI state for the Daily Food Log screen (S-001).
+ *
+ * Includes progress states for calories and macros per US-012:
+ * - [calorieProgress]: Progress toward calorie goal with threshold-based levels.
+ * - [proteinProgress]: Progress toward protein goal.
+ * - [fatProgress]: Progress toward fat goal.
+ * - [carbsProgress]: Progress toward carbs goal.
  */
 data class DailyFoodLogUiState(
     val entries: List<FoodIntakeWithFood> = emptyList(),
@@ -38,6 +73,10 @@ data class DailyFoodLogUiState(
     val totalProtein: Double = 0.0,
     val totalFat: Double = 0.0,
     val totalCarbs: Double = 0.0,
+    val calorieProgress: NutrientProgress = NutrientProgress(),
+    val proteinProgress: NutrientProgress = NutrientProgress(),
+    val fatProgress: NutrientProgress = NutrientProgress(),
+    val carbsProgress: NutrientProgress = NutrientProgress(),
     val isLoading: Boolean = true,
     val error: String? = null,
     val deleteDialogEntry: FoodIntakeWithFood? = null,
@@ -119,12 +158,30 @@ class DailyFoodLogViewModel @Inject constructor(
                     val totalFatVal = entries.sumOf { it.entry.totalFat }
                     val totalCarbsVal = entries.sumOf { it.entry.totalCarbs }
 
+                    val roundedProtein = roundToOneDecimal(totalProt)
+                    val roundedFat = roundToOneDecimal(totalFatVal)
+                    val roundedCarbs = roundToOneDecimal(totalCarbsVal)
+
+                    // Recalculate progress states with current goal (US-012, AC-054)
+                    val goal = state.activeGoal
                     state.copy(
                         entries = entries,
                         totalCalories = totalCals,
-                        totalProtein = roundToOneDecimal(totalProt),
-                        totalFat = roundToOneDecimal(totalFatVal),
-                        totalCarbs = roundToOneDecimal(totalCarbsVal),
+                        totalProtein = roundedProtein,
+                        totalFat = roundedFat,
+                        totalCarbs = roundedCarbs,
+                        calorieProgress = computeNutrientProgress(
+                            totalCals.toDouble(), goal?.calorieTarget?.toDouble()
+                        ),
+                        proteinProgress = computeNutrientProgress(
+                            roundedProtein, goal?.proteinTarget
+                        ),
+                        fatProgress = computeNutrientProgress(
+                            roundedFat, goal?.fatTarget
+                        ),
+                        carbsProgress = computeNutrientProgress(
+                            roundedCarbs, goal?.carbsTarget
+                        ),
                         isLoading = false,
                         error = null
                     )
@@ -136,7 +193,24 @@ class DailyFoodLogViewModel @Inject constructor(
     private fun observeGoal() {
         viewModelScope.launch {
             calorieGoalRepository.getActiveGoal().collect { goal ->
-                _uiState.update { it.copy(activeGoal = goal) }
+                _uiState.update { state ->
+                    // EC-090: Recalculate progress when goal changes mid-day
+                    state.copy(
+                        activeGoal = goal,
+                        calorieProgress = computeNutrientProgress(
+                            state.totalCalories.toDouble(), goal?.calorieTarget?.toDouble()
+                        ),
+                        proteinProgress = computeNutrientProgress(
+                            state.totalProtein, goal?.proteinTarget
+                        ),
+                        fatProgress = computeNutrientProgress(
+                            state.totalFat, goal?.fatTarget
+                        ),
+                        carbsProgress = computeNutrientProgress(
+                            state.totalCarbs, goal?.carbsTarget
+                        )
+                    )
+                }
             }
         }
     }
@@ -421,6 +495,55 @@ class DailyFoodLogViewModel @Inject constructor(
         }
 
         return null
+    }
+
+    // ============================
+    // Progress computation (US-012)
+    // ============================
+
+    /**
+     * Computes [NutrientProgress] for a given consumed value and optional goal.
+     *
+     * Implements the color threshold logic from the design spec (C-004):
+     * - 0-89%: NORMAL (success green)
+     * - 90-100%: APPROACHING (warning orange)
+     * - 100%+: EXCEEDED (error red)
+     * - No goal: NO_GOAL (no progress bar shown)
+     *
+     * Handles edge cases:
+     * - EC-087: Exactly 100% -> APPROACHING (still within the 90-100% range)
+     * - EC-088: 0 calories -> 0% progress
+     * - EC-089: Progress beyond 100% is tracked but display capped at 150%
+     * - EC-090: Recomputed when goal changes
+     * - EC-091: Values rounded to 1 decimal place (via roundToOneDecimal)
+     */
+    internal fun computeNutrientProgress(consumed: Double, goal: Double?): NutrientProgress {
+        if (goal == null || goal <= 0) {
+            return NutrientProgress(
+                consumed = consumed,
+                goal = null,
+                progress = null,
+                remaining = null,
+                progressLevel = ProgressLevel.NO_GOAL
+            )
+        }
+
+        val progress = (consumed / goal).toFloat()
+        val remaining = goal - consumed
+
+        val level = when {
+            progress < 0.9f -> ProgressLevel.NORMAL
+            progress <= 1.0f -> ProgressLevel.APPROACHING
+            else -> ProgressLevel.EXCEEDED
+        }
+
+        return NutrientProgress(
+            consumed = consumed,
+            goal = goal,
+            progress = progress,
+            remaining = roundToOneDecimal(remaining),
+            progressLevel = level
+        )
     }
 
     // ============================

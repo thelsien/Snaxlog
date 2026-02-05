@@ -1,7 +1,5 @@
 package com.snaxlog.app.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,15 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -32,8 +27,17 @@ import java.text.NumberFormat
 
 /**
  * C-003: DailySummaryCard
+ *
  * Prominent card showing daily calorie and macro totals vs. goal.
- * Changes appearance based on goal progress.
+ * Changes appearance based on goal progress with visual indicators:
+ *
+ * Variants:
+ * - default: Within goal (0-89%) - Success color (green)
+ * - approaching: Near goal (90-100%) - Warning color (orange) + "approaching limit" text
+ * - exceeded: Over goal (100%+) - Error color (red) + "over goal by X" text
+ * - noGoal: No active goal set - Totals only with "Tap to set a goal" prompt
+ *
+ * Uses the reusable ProgressBar (C-004) and MacroIndicator (C-005) components.
  */
 @Composable
 fun DailySummaryCard(
@@ -51,32 +55,24 @@ fun DailySummaryCard(
     val customColors = SnaxlogThemeExtras.customColors
     val numberFormat = NumberFormat.getNumberInstance()
 
+    // Calculate calorie progress (AC-052, AC-055)
     val progress = if (calorieGoal != null && calorieGoal > 0) {
         caloriesConsumed.toFloat() / calorieGoal.toFloat()
     } else 0f
 
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1.5f),
-        animationSpec = tween(durationMillis = 300),
-        label = "progress"
-    )
-
-    val progressColor = when {
-        progress < 0.9f -> customColors.success
-        progress <= 1.0f -> customColors.warning
-        else -> MaterialTheme.colorScheme.error
-    }
-
     val remaining = if (calorieGoal != null) calorieGoal - caloriesConsumed else null
 
-    val descriptionText = if (calorieGoal != null) {
-        "Daily summary. ${numberFormat.format(caloriesConsumed)} of ${numberFormat.format(calorieGoal)} calories consumed. " +
-                "${remaining?.let { "${numberFormat.format(it)} remaining" } ?: ""}. " +
-                "Protein: ${formatMacro(proteinConsumed)}g, Fat: ${formatMacro(fatConsumed)}g, Carbs: ${formatMacro(carbsConsumed)}g. " +
-                "Tap to manage goals."
-    } else {
-        "Daily summary. ${numberFormat.format(caloriesConsumed)} calories consumed. No goal set. Tap to set a goal."
-    }
+    // Build accessibility description
+    val descriptionText = buildAccessibilityDescription(
+        caloriesConsumed = caloriesConsumed,
+        calorieGoal = calorieGoal,
+        remaining = remaining,
+        progress = progress,
+        proteinConsumed = proteinConsumed,
+        fatConsumed = fatConsumed,
+        carbsConsumed = carbsConsumed,
+        numberFormat = numberFormat
+    )
 
     Card(
         modifier = modifier
@@ -116,7 +112,7 @@ fun DailySummaryCard(
 
             Spacer(modifier = Modifier.height(Spacing.md))
 
-            // Calorie numbers
+            // Calorie numbers (AC-052)
             if (calorieGoal != null) {
                 Text(
                     text = "${numberFormat.format(caloriesConsumed)} / ${numberFormat.format(calorieGoal)}",
@@ -140,40 +136,34 @@ fun DailySummaryCard(
                 textAlign = TextAlign.Center
             )
 
-            // Progress bar - only shown when goal exists
+            // Progress bar and remaining text - only shown when goal exists
             if (calorieGoal != null) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
-                LinearProgressIndicator(
-                    progress = { animatedProgress.coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    color = progressColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
+                // C-004: ProgressBar with color thresholds
+                ProgressBar(progress = progress)
 
                 Spacer(modifier = Modifier.height(Spacing.sm))
 
-                // Remaining text
-                val remainingText = when {
-                    remaining == null -> ""
-                    remaining > 0 -> "${numberFormat.format(remaining)} remaining"
-                    remaining == 0 -> "Goal reached!"
-                    else -> "Over goal by ${numberFormat.format(-remaining)}"
-                }
+                // Remaining/status text with appropriate coloring (AC-055, EC-087)
+                val (remainingText, remainingColor) = getRemainingTextAndColor(
+                    remaining = remaining,
+                    progress = progress,
+                    numberFormat = numberFormat,
+                    successColor = customColors.success,
+                    warningColor = customColors.warning,
+                    errorColor = MaterialTheme.colorScheme.error,
+                    defaultColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
                 Text(
                     text = remainingText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (remaining != null && remaining < 0) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    },
+                    color = remainingColor,
                     textAlign = TextAlign.Center
                 )
             } else {
+                // STATE-003: No Goal (AC-056)
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
                     text = "Tap to set a goal for tracking",
@@ -185,7 +175,7 @@ fun DailySummaryCard(
 
             Spacer(modifier = Modifier.height(Spacing.md))
 
-            // Macro row
+            // Macro row (AC-053) with progress bars when goals are set
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -207,6 +197,73 @@ fun DailySummaryCard(
                 )
             }
         }
+    }
+}
+
+/**
+ * Determines the remaining text and its color based on the current progress state.
+ *
+ * @return Pair of (text, color) for the remaining/status indicator.
+ */
+internal fun getRemainingTextAndColor(
+    remaining: Int?,
+    progress: Float,
+    numberFormat: NumberFormat,
+    successColor: androidx.compose.ui.graphics.Color,
+    warningColor: androidx.compose.ui.graphics.Color,
+    errorColor: androidx.compose.ui.graphics.Color,
+    defaultColor: androidx.compose.ui.graphics.Color
+): Pair<String, androidx.compose.ui.graphics.Color> {
+    if (remaining == null) return Pair("", defaultColor)
+
+    return when {
+        // EC-087: Exactly 100% shows completion indicator
+        remaining == 0 -> Pair("Goal reached!", successColor)
+        // AC-055: Over goal shows error indicator
+        remaining < 0 -> Pair(
+            "Over goal by ${numberFormat.format(-remaining)}",
+            errorColor
+        )
+        // 90-100%: Approaching goal warning
+        progress >= PROGRESS_THRESHOLD_WARNING -> Pair(
+            "${numberFormat.format(remaining)} remaining - approaching limit",
+            warningColor
+        )
+        // 0-89%: Normal remaining
+        else -> Pair(
+            "${numberFormat.format(remaining)} remaining",
+            defaultColor
+        )
+    }
+}
+
+/**
+ * Builds the accessibility content description for the daily summary card.
+ */
+private fun buildAccessibilityDescription(
+    caloriesConsumed: Int,
+    calorieGoal: Int?,
+    remaining: Int?,
+    progress: Float,
+    proteinConsumed: Double,
+    fatConsumed: Double,
+    carbsConsumed: Double,
+    numberFormat: NumberFormat
+): String {
+    return if (calorieGoal != null) {
+        val percentage = (progress * 100).toInt().coerceAtLeast(0)
+        val progressStatus = when {
+            progress >= PROGRESS_THRESHOLD_EXCEEDED -> "Over goal."
+            progress >= PROGRESS_THRESHOLD_WARNING -> "Approaching goal limit."
+            else -> ""
+        }
+        "Daily summary. ${numberFormat.format(caloriesConsumed)} of ${numberFormat.format(calorieGoal)} calories consumed. " +
+                "$percentage percent of goal. $progressStatus " +
+                "${remaining?.let { if (it >= 0) "${numberFormat.format(it)} remaining" else "Over by ${numberFormat.format(-it)}" } ?: ""}. " +
+                "Protein: ${formatMacro(proteinConsumed)}g, Fat: ${formatMacro(fatConsumed)}g, Carbs: ${formatMacro(carbsConsumed)}g. " +
+                "Tap to manage goals."
+    } else {
+        "Daily summary. ${numberFormat.format(caloriesConsumed)} calories consumed. No goal set. Tap to set a goal."
     }
 }
 
