@@ -17,8 +17,20 @@ class CalorieGoalRepositoryImpl @Inject constructor(
     override fun getAllGoals(): Flow<List<CalorieGoalEntity>> =
         calorieGoalDao.getAllGoals()
 
+    override suspend fun getGoalById(id: Long): CalorieGoalEntity? =
+        calorieGoalDao.getGoalById(id)
+
     override suspend fun setActiveGoal(goalId: Long) {
         calorieGoalDao.deactivateAllGoals()
         calorieGoalDao.activateGoal(goalId)
     }
+
+    override suspend fun addGoal(goal: CalorieGoalEntity): Long =
+        calorieGoalDao.insertGoal(goal)
+
+    override suspend fun updateGoal(goal: CalorieGoalEntity) =
+        calorieGoalDao.updateGoal(goal)
+
+    override suspend fun deleteGoal(goalId: Long) =
+        calorieGoalDao.deleteGoal(goalId)
 }
