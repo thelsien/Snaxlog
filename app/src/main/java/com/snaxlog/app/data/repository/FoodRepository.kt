@@ -7,4 +7,6 @@ interface FoodRepository {
     fun getAllFoods(): Flow<List<FoodEntity>>
     fun searchFoods(query: String): Flow<List<FoodEntity>>
     suspend fun getFoodById(id: Long): FoodEntity?
+    fun getDistinctCategories(): Flow<List<String>>
+    fun getFoodsByCategory(category: String): Flow<List<FoodEntity>>
 }

@@ -19,4 +19,10 @@ class FoodRepositoryImpl @Inject constructor(
 
     override suspend fun getFoodById(id: Long): FoodEntity? =
         foodDao.getFoodById(id)
+
+    override fun getDistinctCategories(): Flow<List<String>> =
+        foodDao.getDistinctCategories()
+
+    override fun getFoodsByCategory(category: String): Flow<List<FoodEntity>> =
+        foodDao.getFoodsByCategory(category)
 }

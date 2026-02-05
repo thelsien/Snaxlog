@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
         FoodIntakeEntryEntity::class,
         CalorieGoalEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class SnaxlogDatabase : RoomDatabase() {
@@ -34,44 +34,11 @@ abstract class SnaxlogDatabase : RoomDatabase() {
         const val DATABASE_NAME = "snaxlog_database"
 
         /**
-         * Pre-populated dummy food data for initial development and testing.
-         * Per requirements (FIP-003 Phase 1): Apple, Chicken Breast, White Rice.
+         * Returns the comprehensive pre-loaded food database (500+ items).
+         * EPIC-003 / US-011: Full food database across 10 categories.
+         * Replaces the former dummy 3-item database from FIP-003 Phase 1.
          */
-        fun getDummyFoods(): List<FoodEntity> = listOf(
-            FoodEntity(
-                id = 1,
-                name = "Apple",
-                category = "Fruits",
-                servingSize = "1 medium (182g)",
-                servingWeightGrams = 182.0,
-                caloriesPerServing = 95,
-                proteinPerServing = 0.5,
-                fatPerServing = 0.3,
-                carbsPerServing = 25.1
-            ),
-            FoodEntity(
-                id = 2,
-                name = "Grilled Chicken Breast",
-                category = "Protein",
-                servingSize = "1 breast (100g)",
-                servingWeightGrams = 100.0,
-                caloriesPerServing = 165,
-                proteinPerServing = 31.0,
-                fatPerServing = 3.6,
-                carbsPerServing = 0.0
-            ),
-            FoodEntity(
-                id = 3,
-                name = "White Rice",
-                category = "Grains",
-                servingSize = "1 cup cooked (158g)",
-                servingWeightGrams = 158.0,
-                caloriesPerServing = 206,
-                proteinPerServing = 4.3,
-                fatPerServing = 0.4,
-                carbsPerServing = 44.5
-            )
-        )
+        fun getPreloadedFoods(): List<FoodEntity> = FoodDatabaseProvider.getAllFoods()
 
         /**
          * Pre-defined calorie goals that cannot be edited or deleted by users.

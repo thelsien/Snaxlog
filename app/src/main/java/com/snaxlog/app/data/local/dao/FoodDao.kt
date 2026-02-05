@@ -27,6 +27,12 @@ interface FoodDao {
     )
     fun searchFoods(query: String): Flow<List<FoodEntity>>
 
+    @Query("SELECT DISTINCT category FROM foods ORDER BY category")
+    fun getDistinctCategories(): Flow<List<String>>
+
+    @Query("SELECT * FROM foods WHERE category = :category ORDER BY name")
+    fun getFoodsByCategory(category: String): Flow<List<FoodEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(foods: List<FoodEntity>)
 
