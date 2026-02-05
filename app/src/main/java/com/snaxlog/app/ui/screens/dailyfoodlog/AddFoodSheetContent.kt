@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,14 +29,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.NutritionPreview
 import com.snaxlog.app.ui.theme.Spacing
@@ -44,6 +48,9 @@ import java.text.NumberFormat
 /**
  * S-003: AddFoodBottomSheet content
  * Search and select food from database, specify serving size.
+ *
+ * EPIC-003 / US-011 / AC-048: Foods are displayed organized by category
+ * with sticky category headers when browsing (no active search query).
  */
 @Composable
 fun AddFoodSheetContent(
@@ -104,58 +111,56 @@ fun AddFoodSheetContent(
                     message = "Try different search terms or browse all foods"
                 )
             } else {
+                // AC-048: Group foods by category for organized browsing.
+                // When searching, show flat list (search results may span categories).
+                // When browsing (empty query), show category headers.
+                val isSearching = state.searchQuery.isNotBlank()
+                val groupedFoods = remember(state.foods, isSearching) {
+                    if (isSearching) {
+                        // Flat list for search results
+                        state.foods.map { FoodListItem.FoodItem(it) }
+                    } else {
+                        // Grouped by category with headers (EC-085 fallback: if
+                        // all categories are empty string, shows flat list)
+                        val grouped = state.foods.groupBy { it.category }
+                        buildList<FoodListItem> {
+                            for ((category, foods) in grouped) {
+                                if (category.isNotBlank()) {
+                                    add(FoodListItem.CategoryHeader(category))
+                                }
+                                addAll(foods.map { FoodListItem.FoodItem(it) })
+                            }
+                        }
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 400.dp)
                 ) {
                     items(
-                        items = state.foods,
-                        key = { it.id }
-                    ) { food ->
-                        // C-008: FoodListItem
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.selectFood(food) }
-                                .padding(
-                                    horizontal = Spacing.listItemPaddingHorizontal,
-                                    vertical = Spacing.listItemPaddingVertical
-                                )
-                                .semantics {
-                                    contentDescription = "${food.name}, ${food.servingSize}, ${food.caloriesPerServing} calories per serving. Tap to select."
-                                },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = food.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = food.servingSize,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = numberFormat.format(food.caloriesPerServing),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.tertiary
-                                )
-                                Text(
-                                    text = " cal",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                        items = groupedFoods,
+                        key = { item ->
+                            when (item) {
+                                is FoodListItem.CategoryHeader -> "header_${item.category}"
+                                is FoodListItem.FoodItem -> "food_${item.food.id}"
                             }
                         }
-                        HorizontalDivider()
+                    ) { item ->
+                        when (item) {
+                            is FoodListItem.CategoryHeader -> {
+                                CategoryHeaderRow(category = item.category)
+                            }
+                            is FoodListItem.FoodItem -> {
+                                FoodItemRow(
+                                    food = item.food,
+                                    numberFormat = numberFormat,
+                                    onClick = { viewModel.selectFood(item.food) }
+                                )
+                                HorizontalDivider()
+                            }
+                        }
                     }
                 }
             }
@@ -189,9 +194,17 @@ fun AddFoodSheetContent(
 
             Spacer(modifier = Modifier.height(Spacing.base))
 
+            // AC-049: Show serving size
             Text(
                 text = "Serving: ${food.servingSize}",
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // AC-050: Show complete nutritional info (category displayed for context)
+            Text(
+                text = "Category: ${food.category}",
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -215,7 +228,7 @@ fun AddFoodSheetContent(
 
             Spacer(modifier = Modifier.height(Spacing.base))
 
-            // C-016: NutritionPreview
+            // C-016: NutritionPreview - AC-050: complete nutritional info
             NutritionPreview(
                 totalCalories = state.previewCalories,
                 totalProtein = state.previewProtein,
@@ -251,6 +264,89 @@ fun AddFoodSheetContent(
             }
 
             Spacer(modifier = Modifier.height(Spacing.base))
+        }
+    }
+}
+
+/**
+ * Sealed class representing items in the food list.
+ * Either a category header or a food item.
+ */
+private sealed class FoodListItem {
+    data class CategoryHeader(val category: String) : FoodListItem()
+    data class FoodItem(val food: FoodEntity) : FoodListItem()
+}
+
+/**
+ * Category header row displayed above each food group.
+ * AC-048: Foods organized by category.
+ */
+@Composable
+private fun CategoryHeaderRow(category: String) {
+    Text(
+        text = category,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(
+                horizontal = Spacing.listItemPaddingHorizontal,
+                vertical = Spacing.sm
+            )
+            .semantics { heading() }
+    )
+}
+
+/**
+ * Individual food item row.
+ * AC-049: Shows food name, standard serving size, and calories per serving.
+ */
+@Composable
+private fun FoodItemRow(
+    food: FoodEntity,
+    numberFormat: NumberFormat,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(
+                horizontal = Spacing.listItemPaddingHorizontal,
+                vertical = Spacing.listItemPaddingVertical
+            )
+            .semantics {
+                contentDescription = "${food.name}, ${food.servingSize}, ${food.caloriesPerServing} calories per serving. Tap to select."
+            },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = food.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = food.servingSize,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = numberFormat.format(food.caloriesPerServing),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Text(
+                text = " cal",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
