@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.ui.components.MealCategorySelector
 import com.snaxlog.app.ui.components.NutritionPreview
 import com.snaxlog.app.ui.theme.Spacing
 
@@ -113,6 +114,16 @@ fun EditFoodSheetContent(
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.base))
+
+                // FIP-005: MealCategorySelector - shows current category, no auto-selection
+                MealCategorySelector(
+                    selectedCategory = state.selectedCategory,
+                    onCategoryChange = { viewModel.updateEditFoodCategory(it) },
+                    autoSelectedCategory = null, // No auto-selection animation in edit mode
+                    showLabel = true
                 )
 
                 Spacer(modifier = Modifier.height(Spacing.base))

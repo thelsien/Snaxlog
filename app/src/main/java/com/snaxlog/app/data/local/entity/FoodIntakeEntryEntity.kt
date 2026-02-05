@@ -8,6 +8,8 @@ import androidx.room.PrimaryKey
 /**
  * Represents a food intake log entry -- a record that the user ate
  * a certain number of servings of a food on a given date/time.
+ *
+ * FIP-005: Added mealCategory field for meal classification.
  */
 @Entity(
     tableName = "food_intake_entries",
@@ -31,5 +33,11 @@ data class FoodIntakeEntryEntity(
     val totalFat: Double,
     val totalCarbs: Double,
     val date: String,       // ISO date string yyyy-MM-dd for the day
-    val timestamp: Long     // epoch millis for ordering
+    val timestamp: Long,    // epoch millis for ordering
+    /**
+     * FIP-005: Meal category classification.
+     * Nullable - null means uncategorized.
+     * Stored as String in database (enum name).
+     */
+    val mealCategory: MealCategory? = null
 )

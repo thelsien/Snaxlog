@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,11 +37,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.components.DailySummaryCard
 import com.snaxlog.app.ui.components.DeleteConfirmationDialog
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodEntryCard
+import com.snaxlog.app.ui.components.MealCategoryHeader
 import com.snaxlog.app.ui.theme.Spacing
+import com.snaxlog.app.util.MealCategoryUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -49,8 +53,9 @@ import java.util.Locale
 /**
  * S-001: DailyFoodLogScreen
  * Main app screen showing daily food log and summary.
+ * FIP-005: Now displays entries grouped by meal category with headers.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DailyFoodLogScreen(
     viewModel: DailyFoodLogViewModel,
@@ -156,6 +161,13 @@ fun DailyFoodLogScreen(
             }
 
             else -> {
+                // FIP-005: Group entries by meal category
+                val groupedEntries = remember(uiState.entries) {
+                    uiState.entries
+                        .groupBy { it.entry.mealCategory }
+                        .toSortedMap(compareBy { MealCategoryUtils.getCategorySortOrder(it) })
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -188,31 +200,56 @@ fun DailyFoodLogScreen(
                             )
                         }
                     } else {
-                        items(
-                            items = uiState.entries,
-                            key = { it.entry.id }
-                        ) { entryWithFood ->
-                            val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
-                            val timeStr = timeFormat.format(Date(entryWithFood.entry.timestamp))
-                            val servingsText = formatServingsDisplay(
-                                entryWithFood.entry.servings,
-                                entryWithFood.food.servingSize
-                            )
+                        // FIP-005: Display entries grouped by meal category with sticky headers
+                        groupedEntries.forEach { (category, categoryEntries) ->
+                            // Calculate subtotals for this category
+                            val totalCals = categoryEntries.sumOf { it.entry.totalCalories }
+                            val totalProt = categoryEntries.sumOf { it.entry.totalProtein }
+                            val totalFatVal = categoryEntries.sumOf { it.entry.totalFat }
+                            val totalCarbsVal = categoryEntries.sumOf { it.entry.totalCarbs }
 
-                            FoodEntryCard(
-                                foodName = entryWithFood.food.name,
-                                servingSize = servingsText,
-                                calories = entryWithFood.entry.totalCalories,
-                                timestamp = timeStr,
-                                onTap = {
-                                    editingEntryId = entryWithFood.entry.id
-                                    viewModel.loadEntryForEdit(entryWithFood.entry.id)
-                                    showEditFoodSheet = true
-                                },
-                                onDelete = {
-                                    viewModel.showDeleteDialog(entryWithFood)
-                                }
-                            )
+                            // Sticky header for category
+                            stickyHeader(key = "header_${category?.name ?: "uncategorized"}") {
+                                MealCategoryHeader(
+                                    category = category,
+                                    entryCount = categoryEntries.size,
+                                    totalCalories = totalCals,
+                                    totalProtein = totalProt,
+                                    totalFat = totalFatVal,
+                                    totalCarbs = totalCarbsVal
+                                )
+                            }
+
+                            // Entries within category (sorted by timestamp descending)
+                            val sortedEntries = categoryEntries.sortedByDescending { it.entry.timestamp }
+                            items(
+                                items = sortedEntries,
+                                key = { it.entry.id }
+                            ) { entryWithFood ->
+                                val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+                                val timeStr = timeFormat.format(Date(entryWithFood.entry.timestamp))
+                                val servingsText = formatServingsDisplay(
+                                    entryWithFood.entry.servings,
+                                    entryWithFood.food.servingSize
+                                )
+
+                                FoodEntryCard(
+                                    foodName = entryWithFood.food.name,
+                                    servingSize = servingsText,
+                                    calories = entryWithFood.entry.totalCalories,
+                                    timestamp = timeStr,
+                                    onTap = {
+                                        editingEntryId = entryWithFood.entry.id
+                                        viewModel.loadEntryForEdit(entryWithFood.entry.id)
+                                        showEditFoodSheet = true
+                                    },
+                                    onDelete = {
+                                        viewModel.showDeleteDialog(entryWithFood)
+                                    },
+                                    // FIP-005: Pass meal category for badge display
+                                    mealCategory = entryWithFood.entry.mealCategory
+                                )
+                            }
                         }
                     }
                 }

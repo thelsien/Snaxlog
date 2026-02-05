@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.snaxlog.app.data.local.dao.CalorieGoalDao
 import com.snaxlog.app.data.local.dao.FoodDao
 import com.snaxlog.app.data.local.dao.FoodIntakeEntryDao
+import com.snaxlog.app.data.local.database.Migrations
 import com.snaxlog.app.data.local.database.SnaxlogDatabase
 import dagger.Module
 import dagger.Provides
@@ -27,6 +28,7 @@ object DatabaseModule {
             SnaxlogDatabase::class.java,
             SnaxlogDatabase.DATABASE_NAME
         )
+            .addMigrations(Migrations.MIGRATION_2_3)
             .fallbackToDestructiveMigration()
             .build()
     }

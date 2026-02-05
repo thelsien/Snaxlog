@@ -111,3 +111,28 @@ val FatDark = Color(0xFFFFD54F)
 
 val CarbsLight = Color(0xFF3F51B5)
 val CarbsDark = Color(0xFF7986CB)
+
+// FIP-005: Meal Category Colors
+// Breakfast - Morning/Sunrise Orange
+val BreakfastLight = Color(0xFFFF6F00)
+val BreakfastDark = Color(0xFFFFB74D)
+
+// Lunch - Midday/Sun Yellow
+val LunchLight = Color(0xFFFBC02D)
+val LunchDark = Color(0xFFFFF59D)
+
+// Dinner - Evening/Dusk Purple
+val DinnerLight = Color(0xFF5E35B1)
+val DinnerDark = Color(0xFF9575CD)
+
+// Snacking - Night/Moon Blue
+val SnackingLight = Color(0xFF1565C0)
+val SnackingDark = Color(0xFF64B5F6)
+
+// Uncategorized - Neutral Gray
+val UncategorizedLight = Color(0xFF616161)
+val UncategorizedDark = Color(0xFFBDBDBD)
+
+// Category Background
+val CategoryBackgroundLight = Color(0xFFF5F5F5)
+val CategoryBackgroundDark = Color(0xFF2C2C2C)

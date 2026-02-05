@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.components.EmptyStateView
+import com.snaxlog.app.ui.components.MealCategorySelector
 import com.snaxlog.app.ui.components.NutritionPreview
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
@@ -224,6 +225,16 @@ fun AddFoodSheetContent(
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.base))
+
+            // FIP-005: MealCategorySelector - auto-selects based on current time
+            MealCategorySelector(
+                selectedCategory = state.selectedCategory,
+                onCategoryChange = { viewModel.updateAddFoodCategory(it) },
+                autoSelectedCategory = state.autoSelectedCategory,
+                showLabel = true
             )
 
             Spacer(modifier = Modifier.height(Spacing.base))
