@@ -50,6 +50,7 @@ import com.snaxlog.app.ui.components.DateNavigationBar
 import com.snaxlog.app.ui.components.DeleteConfirmationDialog
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodEntryCard
+import com.snaxlog.app.ui.components.DateSwipeContainer
 import com.snaxlog.app.ui.components.HistoricalDateBanner
 import com.snaxlog.app.ui.components.MealCategoryHeader
 import com.snaxlog.app.ui.components.SnaxlogDatePickerDialog
@@ -204,15 +205,22 @@ fun DailyFoodLogScreen(
                         .toSortedMap(compareBy { MealCategoryUtils.getCategorySortOrder(it) })
                 }
 
-                LazyColumn(
+                // FIP-EPIC-005: Wrap content in DateSwipeContainer for swipe navigation
+                DateSwipeContainer(
+                    onNavigateToPrevious = { viewModel.navigateToPreviousDay() },
+                    onNavigateToNext = { viewModel.navigateToNextDay() },
+                    canNavigateToNext = uiState.canNavigateForward,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(
-                        top = Spacing.sm,
-                        bottom = Spacing.fabClearance
-                    )
+                        .padding(paddingValues)
                 ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = Spacing.sm,
+                            bottom = Spacing.fabClearance
+                        )
+                    ) {
                     // Summary card - always shown
                     // FIP-EPIC-005 US-014: Dynamic title based on selected date
                     item(key = "summary") {
@@ -304,6 +312,7 @@ fun DailyFoodLogScreen(
                                 )
                             }
                         }
+                    }
                     }
                 }
             }
