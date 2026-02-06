@@ -6,9 +6,11 @@ import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeWithFood
+import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.data.repository.CalorieGoalRepository
 import com.snaxlog.app.data.repository.FoodIntakeRepository
 import com.snaxlog.app.data.repository.FoodRepository
+import com.snaxlog.app.util.MealCategoryUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -85,6 +87,7 @@ data class DailyFoodLogUiState(
 
 /**
  * UI state for the Add Food bottom sheet (S-003).
+ * FIP-005: Added meal category fields.
  */
 data class AddFoodUiState(
     val searchQuery: String = "",
@@ -97,11 +100,15 @@ data class AddFoodUiState(
     val previewFat: Double = 0.0,
     val previewCarbs: Double = 0.0,
     val isSaving: Boolean = false,
-    val isLoadingFoods: Boolean = true
+    val isLoadingFoods: Boolean = true,
+    // FIP-005: Meal category fields
+    val selectedCategory: MealCategory? = null,
+    val autoSelectedCategory: MealCategory? = null
 )
 
 /**
  * UI state for the Edit Food bottom sheet (S-004).
+ * FIP-005: Added meal category field.
  */
 data class EditFoodUiState(
     val entry: FoodIntakeWithFood? = null,
@@ -113,7 +120,9 @@ data class EditFoodUiState(
     val previewCarbs: Double = 0.0,
     val isSaving: Boolean = false,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    // FIP-005: Meal category field (no auto-selection in edit mode)
+    val selectedCategory: MealCategory? = null
 )
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -288,8 +297,20 @@ class DailyFoodLogViewModel @Inject constructor(
     // ============================
 
     fun openAddFood() {
-        _addFoodState.value = AddFoodUiState()
+        // FIP-005: Auto-select category based on current time
+        val autoCategory = MealCategoryUtils.getCurrentMealCategory()
+        _addFoodState.value = AddFoodUiState(
+            selectedCategory = autoCategory,
+            autoSelectedCategory = autoCategory
+        )
         _searchQuery.value = ""
+    }
+
+    /**
+     * FIP-005: Update meal category selection in add food flow.
+     */
+    fun updateAddFoodCategory(category: MealCategory?) {
+        _addFoodState.update { it.copy(selectedCategory = category) }
     }
 
     fun updateSearchQuery(query: String) {
@@ -367,6 +388,7 @@ class DailyFoodLogViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                // FIP-005: Include meal category in entry
                 val entry = FoodIntakeEntryEntity(
                     foodId = food.id,
                     servings = servings,
@@ -375,7 +397,8 @@ class DailyFoodLogViewModel @Inject constructor(
                     totalFat = roundToOneDecimal(food.fatPerServing * servings),
                     totalCarbs = roundToOneDecimal(food.carbsPerServing * servings),
                     date = getCurrentDate(),
-                    timestamp = System.currentTimeMillis()
+                    timestamp = System.currentTimeMillis(),
+                    mealCategory = state.selectedCategory
                 )
                 foodIntakeRepository.addEntry(entry)
                 _addFoodState.update { it.copy(isSaving = false) }
@@ -400,6 +423,7 @@ class DailyFoodLogViewModel @Inject constructor(
                 val entryWithFood = foodIntakeRepository.getEntryWithFoodById(entryId)
                 if (entryWithFood != null) {
                     val servingsStr = formatServings(entryWithFood.entry.servings)
+                    // FIP-005: Load existing meal category
                     _editFoodState.update {
                         it.copy(
                             entry = entryWithFood,
@@ -409,7 +433,8 @@ class DailyFoodLogViewModel @Inject constructor(
                             previewFat = entryWithFood.entry.totalFat,
                             previewCarbs = entryWithFood.entry.totalCarbs,
                             isLoading = false,
-                            error = null
+                            error = null,
+                            selectedCategory = entryWithFood.entry.mealCategory
                         )
                     }
                 } else {
@@ -424,6 +449,13 @@ class DailyFoodLogViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * FIP-005: Update meal category selection in edit food flow.
+     */
+    fun updateEditFoodCategory(category: MealCategory?) {
+        _editFoodState.update { it.copy(selectedCategory = category) }
     }
 
     fun updateEditFoodServings(input: String) {
@@ -460,12 +492,14 @@ class DailyFoodLogViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val food = entryWithFood.food
+                // FIP-005: Include meal category in update
                 val updatedEntry = entryWithFood.entry.copy(
                     servings = servings,
                     totalCalories = (food.caloriesPerServing * servings).roundToInt(),
                     totalProtein = roundToOneDecimal(food.proteinPerServing * servings),
                     totalFat = roundToOneDecimal(food.fatPerServing * servings),
-                    totalCarbs = roundToOneDecimal(food.carbsPerServing * servings)
+                    totalCarbs = roundToOneDecimal(food.carbsPerServing * servings),
+                    mealCategory = state.selectedCategory
                 )
                 foodIntakeRepository.updateEntry(updatedEntry)
                 _editFoodState.update { it.copy(isSaving = false) }
