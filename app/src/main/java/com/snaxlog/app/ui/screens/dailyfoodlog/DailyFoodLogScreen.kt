@@ -34,7 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +43,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.components.DailySummaryCard
 import com.snaxlog.app.ui.components.DateNavigationBar
 import com.snaxlog.app.ui.components.DeleteConfirmationDialog
@@ -56,7 +54,6 @@ import com.snaxlog.app.ui.components.MealCategoryHeader
 import com.snaxlog.app.ui.components.SnaxlogDatePickerDialog
 import com.snaxlog.app.ui.theme.Spacing
 import com.snaxlog.app.util.MealCategoryUtils
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.util.Date
@@ -76,12 +73,10 @@ fun DailyFoodLogScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     // Bottom sheet states
     var showAddFoodSheet by remember { mutableStateOf(false) }
     var showEditFoodSheet by remember { mutableStateOf(false) }
-    var editingEntryId by remember { mutableStateOf<Long?>(null) }
 
     val addFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val editFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -97,16 +92,17 @@ fun DailyFoodLogScreen(
     // Handle snackbar messages
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            viewModel.clearSnackbar()
-
-            // Close sheets after successful operation
+            // Close sheets immediately before showing snackbar
+            // (showSnackbar suspends until dismissed, which would block sheet closure)
             if (message == "Entry added") {
                 showAddFoodSheet = false
             }
             if (message == "Entry updated") {
                 showEditFoodSheet = false
             }
+
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearSnackbar()
         }
     }
 
@@ -153,7 +149,6 @@ fun DailyFoodLogScreen(
                 FloatingActionButton(
                     onClick = {
                         viewModel.openAddFood()
-                        showAddFoodSheet = true
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -227,7 +222,7 @@ fun DailyFoodLogScreen(
                         val summaryTitle = if (uiState.isViewingToday) {
                             "Today's Summary"
                         } else {
-                            val formatter = DateTimeFormatter.ofPattern("EEEE's Summary", Locale.getDefault())
+                            val formatter = DateTimeFormatter.ofPattern("EEEE'''s Summary'", Locale.getDefault())
                             uiState.selectedDate.format(formatter)
                         }
 
@@ -300,7 +295,6 @@ fun DailyFoodLogScreen(
                                     calories = entryWithFood.entry.totalCalories,
                                     timestamp = timeStr,
                                     onTap = {
-                                        editingEntryId = entryWithFood.entry.id
                                         viewModel.loadEntryForEdit(entryWithFood.entry.id)
                                         showEditFoodSheet = true
                                     },
@@ -369,7 +363,7 @@ private fun formatServingsDisplay(servings: Double, servingSize: String): String
     val servingsStr = if (servings == servings.toLong().toDouble()) {
         "${servings.toLong()}.0"
     } else {
-        String.format("%.2f", servings).trimEnd('0').let {
+        String.format(Locale.getDefault(), "%.2f", servings).trimEnd('0').let {
             if (it.endsWith(".")) "${it}0" else it
         }
     }
