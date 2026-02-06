@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
@@ -38,6 +39,7 @@ class DailyFoodLogViewModelTest {
     private lateinit var foodIntakeRepository: FoodIntakeRepository
     private lateinit var foodRepository: FoodRepository
     private lateinit var calorieGoalRepository: CalorieGoalRepository
+    private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: DailyFoodLogViewModel
 
     private val testFood = FoodEntity(
@@ -79,6 +81,7 @@ class DailyFoodLogViewModelTest {
         foodIntakeRepository = mockk(relaxed = true)
         foodRepository = mockk(relaxed = true)
         calorieGoalRepository = mockk(relaxed = true)
+        savedStateHandle = SavedStateHandle()
 
         // Default mock behavior
         every { foodIntakeRepository.getEntriesForDate(any()) } returns entriesFlow
@@ -89,7 +92,8 @@ class DailyFoodLogViewModelTest {
         viewModel = DailyFoodLogViewModel(
             foodIntakeRepository = foodIntakeRepository,
             foodRepository = foodRepository,
-            calorieGoalRepository = calorieGoalRepository
+            calorieGoalRepository = calorieGoalRepository,
+            savedStateHandle = savedStateHandle
         )
     }
 

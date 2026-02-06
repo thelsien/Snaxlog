@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.lifecycle.SavedStateHandle
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeWithFood
 import com.snaxlog.app.data.repository.CalorieGoalRepository
@@ -76,7 +77,7 @@ class SearchFoodTest {
         every { foodRepository.searchFoods("pizza") } returns flowOf(emptyList())
         every { foodRepository.searchFoods("!@#\$%") } returns flowOf(emptyList())
 
-        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository)
+        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle())
     }
 
     @After
