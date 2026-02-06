@@ -78,6 +78,7 @@ private val DarkColorScheme = darkColorScheme(
 /**
  * Custom colors not provided by Material 3 default scheme.
  * Includes semantic colors for progress states and macro nutrient indicators.
+ * FIP-EPIC-005: Added historical date viewing colors.
  */
 @Immutable
 data class CustomColors(
@@ -89,7 +90,12 @@ data class CustomColors(
     val warningContainer: Color = Color.Unspecified,
     val protein: Color = Color.Unspecified,
     val fat: Color = Color.Unspecified,
-    val carbs: Color = Color.Unspecified
+    val carbs: Color = Color.Unspecified,
+    // FIP-EPIC-005: Historical day viewing colors
+    val historicalDate: Color = Color.Unspecified,
+    val historicalDateBackground: Color = Color.Unspecified,
+    val todayIndicator: Color = Color.Unspecified,
+    val futureDateDisabled: Color = Color.Unspecified
 )
 
 val LightCustomColors = CustomColors(
@@ -101,7 +107,12 @@ val LightCustomColors = CustomColors(
     warningContainer = WarningContainerLight,
     protein = ProteinLight,
     fat = FatLight,
-    carbs = CarbsLight
+    carbs = CarbsLight,
+    // FIP-EPIC-005: Historical day viewing
+    historicalDate = HistoricalDateLight,
+    historicalDateBackground = HistoricalDateBackgroundLight,
+    todayIndicator = TodayIndicatorLight,
+    futureDateDisabled = FutureDateDisabledLight
 )
 
 val DarkCustomColors = CustomColors(
@@ -113,7 +124,12 @@ val DarkCustomColors = CustomColors(
     warningContainer = WarningContainerDark,
     protein = ProteinDark,
     fat = FatDark,
-    carbs = CarbsDark
+    carbs = CarbsDark,
+    // FIP-EPIC-005: Historical day viewing
+    historicalDate = HistoricalDateDark,
+    historicalDateBackground = HistoricalDateBackgroundDark,
+    todayIndicator = TodayIndicatorDark,
+    futureDateDisabled = FutureDateDisabledDark
 )
 
 val LocalCustomColors = staticCompositionLocalOf { CustomColors() }
