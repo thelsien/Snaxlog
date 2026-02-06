@@ -1,7 +1,14 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,7 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,16 +43,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.components.DailySummaryCard
+import com.snaxlog.app.ui.components.DateNavigationBar
 import com.snaxlog.app.ui.components.DeleteConfirmationDialog
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodEntryCard
+import com.snaxlog.app.ui.components.DateSwipeContainer
+import com.snaxlog.app.ui.components.HistoricalDateBanner
 import com.snaxlog.app.ui.components.MealCategoryHeader
+import com.snaxlog.app.ui.components.SnaxlogDatePickerDialog
 import com.snaxlog.app.ui.theme.Spacing
 import com.snaxlog.app.util.MealCategoryUtils
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -54,6 +63,7 @@ import java.util.Locale
  * S-001: DailyFoodLogScreen
  * Main app screen showing daily food log and summary.
  * FIP-005: Now displays entries grouped by meal category with headers.
+ * FIP-EPIC-005: Now supports historical day viewing with date navigation (US-013 to US-017).
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -63,12 +73,10 @@ fun DailyFoodLogScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     // Bottom sheet states
     var showAddFoodSheet by remember { mutableStateOf(false) }
     var showEditFoodSheet by remember { mutableStateOf(false) }
-    var editingEntryId by remember { mutableStateOf<Long?>(null) }
 
     val addFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val editFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -84,39 +92,63 @@ fun DailyFoodLogScreen(
     // Handle snackbar messages
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            viewModel.clearSnackbar()
-
-            // Close sheets after successful operation
+            // Close sheets immediately before showing snackbar
+            // (showSnackbar suspends until dismissed, which would block sheet closure)
             if (message == "Entry added") {
                 showAddFoodSheet = false
             }
             if (message == "Entry updated") {
                 showEditFoodSheet = false
             }
+
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearSnackbar()
         }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Snaxlog",
-                        style = MaterialTheme.typography.titleLarge
+            // FIP-EPIC-005: Stack TopAppBar and DateNavigationBar
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Snaxlog",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            )
+
+                // FIP-EPIC-005 US-013: DateNavigationBar (C-023)
+                DateNavigationBar(
+                    selectedDate = uiState.selectedDate,
+                    onDateChange = { viewModel.setSelectedDate(it) },
+                    onOpenDatePicker = { viewModel.openDatePicker() }
+                )
+
+                // FIP-EPIC-005 US-013: HistoricalDateBanner (C-025) - only visible when not viewing today
+                AnimatedVisibility(
+                    visible = !uiState.isViewingToday,
+                    enter = fadeIn(animationSpec = tween(200)) +
+                            slideInVertically(animationSpec = tween(200)) { -it },
+                    exit = fadeOut(animationSpec = tween(200)) +
+                           slideOutVertically(animationSpec = tween(200)) { -it }
+                ) {
+                    HistoricalDateBanner(
+                        date = uiState.selectedDate,
+                        onReturnToToday = { viewModel.returnToToday() }
+                    )
+                }
+            }
         },
         floatingActionButton = {
             if (!uiState.isLoading && uiState.error == null) {
                 FloatingActionButton(
                     onClick = {
                         viewModel.openAddFood()
-                        showAddFoodSheet = true
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -168,18 +200,34 @@ fun DailyFoodLogScreen(
                         .toSortedMap(compareBy { MealCategoryUtils.getCategorySortOrder(it) })
                 }
 
-                LazyColumn(
+                // FIP-EPIC-005: Wrap content in DateSwipeContainer for swipe navigation
+                DateSwipeContainer(
+                    onNavigateToPrevious = { viewModel.navigateToPreviousDay() },
+                    onNavigateToNext = { viewModel.navigateToNextDay() },
+                    canNavigateToNext = uiState.canNavigateForward,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(
-                        top = Spacing.sm,
-                        bottom = Spacing.fabClearance
-                    )
+                        .padding(paddingValues)
                 ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = Spacing.sm,
+                            bottom = Spacing.fabClearance
+                        )
+                    ) {
                     // Summary card - always shown
+                    // FIP-EPIC-005 US-014: Dynamic title based on selected date
                     item(key = "summary") {
+                        val summaryTitle = if (uiState.isViewingToday) {
+                            "Today's Summary"
+                        } else {
+                            val formatter = DateTimeFormatter.ofPattern("EEEE'''s Summary'", Locale.getDefault())
+                            uiState.selectedDate.format(formatter)
+                        }
+
                         DailySummaryCard(
+                            title = summaryTitle,
                             caloriesConsumed = uiState.totalCalories,
                             calorieGoal = uiState.activeGoal?.calorieTarget,
                             proteinConsumed = uiState.totalProtein,
@@ -193,11 +241,19 @@ fun DailyFoodLogScreen(
                     }
 
                     if (uiState.entries.isEmpty()) {
+                        // FIP-EPIC-005 US-014: Different empty state for historical dates
                         item(key = "empty") {
-                            EmptyStateView(
-                                title = "No meals logged yet",
-                                message = "Start tracking by tapping the + button below"
-                            )
+                            if (uiState.isViewingToday) {
+                                EmptyStateView(
+                                    title = "No meals logged yet",
+                                    message = "Start tracking by tapping the + button below"
+                                )
+                            } else {
+                                EmptyStateView(
+                                    title = "No meals logged",
+                                    message = "No food entries were logged on this day. Tap the + button to add a retroactive entry."
+                                )
+                            }
                         }
                     } else {
                         // FIP-005: Display entries grouped by meal category with sticky headers
@@ -239,7 +295,6 @@ fun DailyFoodLogScreen(
                                     calories = entryWithFood.entry.totalCalories,
                                     timestamp = timeStr,
                                     onTap = {
-                                        editingEntryId = entryWithFood.entry.id
                                         viewModel.loadEntryForEdit(entryWithFood.entry.id)
                                         showEditFoodSheet = true
                                     },
@@ -251,6 +306,7 @@ fun DailyFoodLogScreen(
                                 )
                             }
                         }
+                    }
                     }
                 }
             }
@@ -291,6 +347,15 @@ fun DailyFoodLogScreen(
                 )
             }
         }
+
+        // FIP-EPIC-005 US-013: Date picker dialog (C-024)
+        if (uiState.isDatePickerOpen) {
+            SnaxlogDatePickerDialog(
+                selectedDate = uiState.selectedDate,
+                onDateSelected = { viewModel.onDatePickerDateSelected(it) },
+                onDismiss = { viewModel.closeDatePicker() }
+            )
+        }
     }
 }
 
@@ -298,7 +363,7 @@ private fun formatServingsDisplay(servings: Double, servingSize: String): String
     val servingsStr = if (servings == servings.toLong().toDouble()) {
         "${servings.toLong()}.0"
     } else {
-        String.format("%.2f", servings).trimEnd('0').let {
+        String.format(Locale.getDefault(), "%.2f", servings).trimEnd('0').let {
             if (it.endsWith(".")) "${it}0" else it
         }
     }

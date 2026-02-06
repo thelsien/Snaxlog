@@ -43,8 +43,11 @@ import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.MealCategorySelector
 import com.snaxlog.app.ui.components.NutritionPreview
+import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * S-003: AddFoodBottomSheet content
@@ -52,6 +55,8 @@ import java.text.NumberFormat
  *
  * EPIC-003 / US-011 / AC-048: Foods are displayed organized by category
  * with sticky category headers when browsing (no active search query).
+ *
+ * FIP-EPIC-005 US-017: Supports adding entries to historical dates.
  */
 @Composable
 fun AddFoodSheetContent(
@@ -60,6 +65,7 @@ fun AddFoodSheetContent(
 ) {
     val state by viewModel.addFoodState.collectAsStateWithLifecycle()
     val numberFormat = NumberFormat.getNumberInstance()
+    val customColors = SnaxlogThemeExtras.customColors
 
     Column(
         modifier = Modifier
@@ -68,6 +74,27 @@ fun AddFoodSheetContent(
     ) {
         if (state.selectedFood == null) {
             // STEP 1: Search and select food
+            // FIP-EPIC-005 US-017: Show date context when adding to historical date
+            if (state.isAddingToHistorical) {
+                val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+                val formattedDate = state.targetDate.format(dateFormatter)
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(customColors.historicalDateBackground)
+                        .padding(horizontal = Spacing.base, vertical = Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Adding entry to: $formattedDate",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = customColors.historicalDate
+                    )
+                }
+                Spacer(modifier = Modifier.height(Spacing.sm))
+            }
+
             Text(
                 text = "Add Food Entry",
                 style = MaterialTheme.typography.headlineSmall,
@@ -230,12 +257,23 @@ fun AddFoodSheetContent(
             Spacer(modifier = Modifier.height(Spacing.base))
 
             // FIP-005: MealCategorySelector - auto-selects based on current time
+            // FIP-EPIC-005 US-017: No auto-selection for historical dates
             MealCategorySelector(
                 selectedCategory = state.selectedCategory,
                 onCategoryChange = { viewModel.updateAddFoodCategory(it) },
-                autoSelectedCategory = state.autoSelectedCategory,
+                autoSelectedCategory = if (state.isAddingToHistorical) null else state.autoSelectedCategory,
                 showLabel = true
             )
+
+            // FIP-EPIC-005 US-017: Show hint for historical entries
+            if (state.isAddingToHistorical) {
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                Text(
+                    text = "Tip: Select the meal category manually for historical entries",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             Spacer(modifier = Modifier.height(Spacing.base))
 

@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.lifecycle.SavedStateHandle
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
@@ -82,7 +83,7 @@ class DeleteEntryTest {
         every { calorieGoalRepository.getActiveGoal() } returns flowOf(null)
         every { foodRepository.getAllFoods() } returns flowOf(listOf(testFood, testFood2))
 
-        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository)
+        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle())
     }
 
     @After

@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.lifecycle.SavedStateHandle
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
@@ -99,7 +100,8 @@ class VisualProgressIndicatorsTest {
         viewModel = DailyFoodLogViewModel(
             foodIntakeRepository = foodIntakeRepository,
             foodRepository = foodRepository,
-            calorieGoalRepository = calorieGoalRepository
+            calorieGoalRepository = calorieGoalRepository,
+            savedStateHandle = SavedStateHandle()
         )
     }
 

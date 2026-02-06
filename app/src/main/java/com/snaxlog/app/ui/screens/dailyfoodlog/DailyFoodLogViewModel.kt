@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
@@ -21,9 +22,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -67,6 +67,12 @@ enum class ProgressLevel {
  * - [proteinProgress]: Progress toward protein goal.
  * - [fatProgress]: Progress toward fat goal.
  * - [carbsProgress]: Progress toward carbs goal.
+ *
+ * FIP-EPIC-005: Historical Day Viewing (US-013 to US-017)
+ * - [selectedDate]: Currently viewed date (defaults to today)
+ * - [isViewingToday]: Computed flag indicating if viewing current day
+ * - [isDatePickerOpen]: Whether the date picker dialog is open
+ * - [canNavigateForward]: Whether forward navigation is allowed (false when on today)
  */
 data class DailyFoodLogUiState(
     val entries: List<FoodIntakeWithFood> = emptyList(),
@@ -82,12 +88,18 @@ data class DailyFoodLogUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val deleteDialogEntry: FoodIntakeWithFood? = null,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    // FIP-EPIC-005: Historical Day Viewing fields
+    val selectedDate: LocalDate = LocalDate.now(),
+    val isViewingToday: Boolean = true,
+    val isDatePickerOpen: Boolean = false,
+    val canNavigateForward: Boolean = false
 )
 
 /**
  * UI state for the Add Food bottom sheet (S-003).
  * FIP-005: Added meal category fields.
+ * FIP-EPIC-005: Added target date for historical entries (US-017).
  */
 data class AddFoodUiState(
     val searchQuery: String = "",
@@ -103,12 +115,16 @@ data class AddFoodUiState(
     val isLoadingFoods: Boolean = true,
     // FIP-005: Meal category fields
     val selectedCategory: MealCategory? = null,
-    val autoSelectedCategory: MealCategory? = null
+    val autoSelectedCategory: MealCategory? = null,
+    // FIP-EPIC-005: Target date for historical entries
+    val targetDate: LocalDate = LocalDate.now(),
+    val isAddingToHistorical: Boolean = false
 )
 
 /**
  * UI state for the Edit Food bottom sheet (S-004).
  * FIP-005: Added meal category field.
+ * FIP-EPIC-005: Added entry date display for historical context (US-015).
  */
 data class EditFoodUiState(
     val entry: FoodIntakeWithFood? = null,
@@ -122,7 +138,10 @@ data class EditFoodUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     // FIP-005: Meal category field (no auto-selection in edit mode)
-    val selectedCategory: MealCategory? = null
+    val selectedCategory: MealCategory? = null,
+    // FIP-EPIC-005: Entry date for context display
+    val entryDate: LocalDate? = null,
+    val isEditingHistorical: Boolean = false
 )
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -130,10 +149,22 @@ data class EditFoodUiState(
 class DailyFoodLogViewModel @Inject constructor(
     private val foodIntakeRepository: FoodIntakeRepository,
     private val foodRepository: FoodRepository,
-    private val calorieGoalRepository: CalorieGoalRepository
+    private val calorieGoalRepository: CalorieGoalRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _currentDate = MutableStateFlow(getCurrentDate())
+    // FIP-EPIC-005: Use LocalDate for date management (EC-098: persisted in SavedStateHandle)
+    private val _selectedDate = MutableStateFlow(
+        savedStateHandle.get<String>(KEY_SELECTED_DATE)?.let { LocalDate.parse(it) } ?: LocalDate.now()
+    )
+
+    // Current date string for database queries (yyyy-MM-dd format)
+    private val _currentDateString = MutableStateFlow(getCurrentDateString())
+
+    companion object {
+        private const val KEY_SELECTED_DATE = "selected_date"
+        private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    }
 
     // Main screen state
     private val _uiState = MutableStateFlow(DailyFoodLogUiState())
@@ -151,14 +182,43 @@ class DailyFoodLogViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
 
     init {
+        observeSelectedDate()
         observeEntries()
         observeGoal()
         observeFoodSearch()
     }
 
+    /**
+     * FIP-EPIC-005: Observe selected date changes and update UI state accordingly.
+     * EC-098: Persists selected date in SavedStateHandle for lifecycle resilience.
+     */
+    private fun observeSelectedDate() {
+        viewModelScope.launch {
+            _selectedDate.collect { date ->
+                val today = LocalDate.now()
+                val isToday = date == today
+                val canForward = date < today
+
+                // Persist to SavedStateHandle for process death recovery (EC-098)
+                savedStateHandle[KEY_SELECTED_DATE] = date.format(DATE_FORMATTER)
+
+                // Update current date string for database queries
+                _currentDateString.value = date.format(DATE_FORMATTER)
+
+                _uiState.update { state ->
+                    state.copy(
+                        selectedDate = date,
+                        isViewingToday = isToday,
+                        canNavigateForward = canForward
+                    )
+                }
+            }
+        }
+    }
+
     private fun observeEntries() {
         viewModelScope.launch {
-            _currentDate.flatMapLatest { date ->
+            _currentDateString.flatMapLatest { date ->
                 foodIntakeRepository.getEntriesForDate(date)
             }.collect { entries ->
                 _uiState.update { state ->
@@ -245,13 +305,93 @@ class DailyFoodLogViewModel @Inject constructor(
 
     // ============================
     // Date management (EC-001, EC-003, EC-005)
+    // FIP-EPIC-005: Historical day viewing (US-013 to US-017)
     // ============================
 
+    /**
+     * Refreshes the date check when app resumes (EC-005).
+     * If viewing today and midnight has passed, update to new today.
+     * If viewing a historical date, maintain that date (EC-098).
+     */
     fun refreshDate() {
-        val newDate = getCurrentDate()
-        if (newDate != _currentDate.value) {
-            _currentDate.value = newDate
+        val today = LocalDate.now()
+        val currentSelected = _selectedDate.value
+
+        // Only auto-update if we were viewing "today" and the day changed
+        if (currentSelected >= today.minusDays(1) && currentSelected < today) {
+            // The date we were viewing is now yesterday, keep viewing it
+            // This handles EC-001: Midnight transition
         }
+        // If currentSelected > today (shouldn't happen), reset to today (EC-095)
+        if (currentSelected > today) {
+            _selectedDate.value = today
+        }
+    }
+
+    /**
+     * FIP-EPIC-005 US-013: Set the selected date for viewing.
+     * EC-095: Prevents navigation to future dates.
+     * EC-097: Cancels pending loads by updating the date flow.
+     *
+     * @param date The date to navigate to
+     */
+    fun setSelectedDate(date: LocalDate) {
+        val today = LocalDate.now()
+        // EC-095, EC-123: Prevent future date selection
+        val safeDate = if (date > today) today else date
+        _selectedDate.value = safeDate
+    }
+
+    /**
+     * FIP-EPIC-005 US-013: Navigate to the previous day.
+     * Always allowed (EC-094: supports any past date).
+     */
+    fun navigateToPreviousDay() {
+        _selectedDate.value = _selectedDate.value.minusDays(1)
+    }
+
+    /**
+     * FIP-EPIC-005 US-013: Navigate to the next day.
+     * EC-095: Blocked when already viewing today.
+     */
+    fun navigateToNextDay() {
+        val current = _selectedDate.value
+        val today = LocalDate.now()
+        if (current < today) {
+            _selectedDate.value = current.plusDays(1)
+        }
+    }
+
+    /**
+     * FIP-EPIC-005 US-013: Quick return to today.
+     */
+    fun returnToToday() {
+        _selectedDate.value = LocalDate.now()
+    }
+
+    /**
+     * FIP-EPIC-005: Open the date picker dialog.
+     */
+    fun openDatePicker() {
+        _uiState.update { it.copy(isDatePickerOpen = true) }
+    }
+
+    /**
+     * FIP-EPIC-005: Close the date picker dialog.
+     */
+    fun closeDatePicker() {
+        _uiState.update { it.copy(isDatePickerOpen = false) }
+    }
+
+    /**
+     * FIP-EPIC-005: Handle date selection from the date picker.
+     * EC-095, EC-123: Validates date is not in the future.
+     *
+     * @param date The selected date
+     */
+    fun onDatePickerDateSelected(date: LocalDate) {
+        setSelectedDate(date)
+        closeDatePicker()
     }
 
     // ============================
@@ -297,11 +437,19 @@ class DailyFoodLogViewModel @Inject constructor(
     // ============================
 
     fun openAddFood() {
+        val targetDate = _selectedDate.value
+        val today = LocalDate.now()
+        val isHistorical = targetDate != today
+
         // FIP-005: Auto-select category based on current time
-        val autoCategory = MealCategoryUtils.getCurrentMealCategory()
+        // FIP-EPIC-005 US-017: Disable auto-selection for historical dates
+        val autoCategory = if (isHistorical) null else MealCategoryUtils.getCurrentMealCategory()
+
         _addFoodState.value = AddFoodUiState(
             selectedCategory = autoCategory,
-            autoSelectedCategory = autoCategory
+            autoSelectedCategory = autoCategory,
+            targetDate = targetDate,
+            isAddingToHistorical = isHistorical
         )
         _searchQuery.value = ""
     }
@@ -388,6 +536,23 @@ class DailyFoodLogViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                // FIP-EPIC-005 US-017: Use target date for historical entries (EC-122)
+                val targetDate = state.targetDate
+                val today = LocalDate.now()
+
+                // EC-123: Defensive check to prevent future dates
+                val safeDate = if (targetDate > today) today else targetDate
+                val dateString = safeDate.format(DATE_FORMATTER)
+
+                // For historical entries, use a timestamp at the end of that day
+                // For today's entries, use current timestamp
+                val timestamp = if (safeDate == today) {
+                    System.currentTimeMillis()
+                } else {
+                    // Use noon on the historical date for ordering purposes
+                    safeDate.atTime(12, 0).toEpochSecond(java.time.ZoneOffset.UTC) * 1000
+                }
+
                 // FIP-005: Include meal category in entry
                 val entry = FoodIntakeEntryEntity(
                     foodId = food.id,
@@ -396,8 +561,8 @@ class DailyFoodLogViewModel @Inject constructor(
                     totalProtein = roundToOneDecimal(food.proteinPerServing * servings),
                     totalFat = roundToOneDecimal(food.fatPerServing * servings),
                     totalCarbs = roundToOneDecimal(food.carbsPerServing * servings),
-                    date = getCurrentDate(),
-                    timestamp = System.currentTimeMillis(),
+                    date = dateString,
+                    timestamp = timestamp,
                     mealCategory = state.selectedCategory
                 )
                 foodIntakeRepository.addEntry(entry)
@@ -423,6 +588,15 @@ class DailyFoodLogViewModel @Inject constructor(
                 val entryWithFood = foodIntakeRepository.getEntryWithFoodById(entryId)
                 if (entryWithFood != null) {
                     val servingsStr = formatServings(entryWithFood.entry.servings)
+                    // FIP-EPIC-005 US-015: Parse entry date for historical context
+                    val entryDate = try {
+                        LocalDate.parse(entryWithFood.entry.date, DATE_FORMATTER)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    val today = LocalDate.now()
+                    val isHistorical = entryDate != null && entryDate != today
+
                     // FIP-005: Load existing meal category
                     _editFoodState.update {
                         it.copy(
@@ -434,7 +608,9 @@ class DailyFoodLogViewModel @Inject constructor(
                             previewCarbs = entryWithFood.entry.totalCarbs,
                             isLoading = false,
                             error = null,
-                            selectedCategory = entryWithFood.entry.mealCategory
+                            selectedCategory = entryWithFood.entry.mealCategory,
+                            entryDate = entryDate,
+                            isEditingHistorical = isHistorical
                         )
                     }
                 } else {
@@ -584,9 +760,12 @@ class DailyFoodLogViewModel @Inject constructor(
     // Helpers
     // ============================
 
-    private fun getCurrentDate(): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        return sdf.format(Date())
+    /**
+     * Gets the current date as a string in yyyy-MM-dd format.
+     * Used for backward compatibility with existing queries.
+     */
+    private fun getCurrentDateString(): String {
+        return LocalDate.now().format(DATE_FORMATTER)
     }
 
     private fun roundToOneDecimal(value: Double): Double {

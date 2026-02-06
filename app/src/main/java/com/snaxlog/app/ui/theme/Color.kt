@@ -136,3 +136,20 @@ val UncategorizedDark = Color(0xFFBDBDBD)
 // Category Background
 val CategoryBackgroundLight = Color(0xFFF5F5F5)
 val CategoryBackgroundDark = Color(0xFF2C2C2C)
+
+// FIP-EPIC-005: Historical Day Viewing Colors
+// Historical date indicator (blue to differentiate from current day green)
+val HistoricalDateLight = Color(0xFF1565C0)
+val HistoricalDateDark = Color(0xFF64B5F6)
+
+// Historical date banner background
+val HistoricalDateBackgroundLight = Color(0xFFE3F2FD)
+val HistoricalDateBackgroundDark = Color(0xFF1A237E)
+
+// Today indicator (green, matches primary)
+val TodayIndicatorLight = Color(0xFF4CAF50)
+val TodayIndicatorDark = Color(0xFF81C784)
+
+// Future date disabled state
+val FutureDateDisabledLight = Color(0xFFBDBDBD)
+val FutureDateDisabledDark = Color(0xFF616161)

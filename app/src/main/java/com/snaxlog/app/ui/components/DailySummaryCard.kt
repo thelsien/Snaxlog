@@ -38,6 +38,10 @@ import java.text.NumberFormat
  * - noGoal: No active goal set - Totals only with "Tap to set a goal" prompt
  *
  * Uses the reusable ProgressBar (C-004) and MacroIndicator (C-005) components.
+ *
+ * FIP-EPIC-005 US-014: Added configurable title for historical day viewing.
+ *
+ * @param title The card title (e.g., "Today's Summary" or "Monday's Summary")
  */
 @Composable
 fun DailySummaryCard(
@@ -50,7 +54,8 @@ fun DailySummaryCard(
     fatGoal: Double? = null,
     carbsGoal: Double? = null,
     onGoalClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "Today's Summary"
 ) {
     val customColors = SnaxlogThemeExtras.customColors
     val numberFormat = NumberFormat.getNumberInstance()
@@ -91,13 +96,14 @@ fun DailySummaryCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header row
+            // FIP-EPIC-005 US-014: Dynamic title for historical dates
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Today's Summary",
+                    text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )

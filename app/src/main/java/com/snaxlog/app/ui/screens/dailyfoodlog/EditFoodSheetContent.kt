@@ -1,5 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,11 +28,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.ui.components.MealCategorySelector
 import com.snaxlog.app.ui.components.NutritionPreview
+import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 import com.snaxlog.app.ui.theme.Spacing
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * S-004: EditFoodBottomSheet content
  * Edit existing food entry's serving size.
+ *
+ * FIP-EPIC-005 US-015: Supports editing entries on historical dates with date display.
  */
 @Composable
 fun EditFoodSheetContent(
@@ -39,6 +45,7 @@ fun EditFoodSheetContent(
     onDismiss: () -> Unit
 ) {
     val state by viewModel.editFoodState.collectAsStateWithLifecycle()
+    val customColors = SnaxlogThemeExtras.customColors
 
     Column(
         modifier = Modifier
@@ -77,6 +84,28 @@ fun EditFoodSheetContent(
             state.entry != null -> {
                 val entryWithFood = state.entry!!
                 val food = entryWithFood.food
+
+                // FIP-EPIC-005 US-015: Show date context for historical entries
+                val entryDate = state.entryDate
+                if (state.isEditingHistorical && entryDate != null) {
+                    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+                    val formattedDate = entryDate.format(dateFormatter)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(customColors.historicalDateBackground)
+                            .padding(horizontal = Spacing.base, vertical = Spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Entry from: $formattedDate",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = customColors.historicalDate
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(Spacing.sm))
+                }
 
                 Text(
                     text = "Edit Entry",
