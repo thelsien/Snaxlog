@@ -200,8 +200,8 @@ fun FoodEntryCard(
                     CategoryBadge(
                         category = mealCategory,
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = Spacing.sm, end = Spacing.sm)
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = Spacing.sm, end = Spacing.sm)
                     )
                 }
             }
