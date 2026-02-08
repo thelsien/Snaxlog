@@ -77,6 +77,7 @@ fun DailyFoodLogScreen(
     // Bottom sheet states
     var showAddFoodSheet by remember { mutableStateOf(false) }
     var showEditFoodSheet by remember { mutableStateOf(false) }
+    var editingEntryId by remember { mutableStateOf<Long?>(null) }
 
     val addFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val editFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -149,6 +150,7 @@ fun DailyFoodLogScreen(
                 FloatingActionButton(
                     onClick = {
                         viewModel.openAddFood()
+                        showAddFoodSheet = true
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -295,6 +297,7 @@ fun DailyFoodLogScreen(
                                     calories = entryWithFood.entry.totalCalories,
                                     timestamp = timeStr,
                                     onTap = {
+                                        editingEntryId = entryWithFood.entry.id
                                         viewModel.loadEntryForEdit(entryWithFood.entry.id)
                                         showEditFoodSheet = true
                                     },
