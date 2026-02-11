@@ -16,10 +16,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -69,7 +71,8 @@ import java.util.Locale
 @Composable
 fun DailyFoodLogScreen(
     viewModel: DailyFoodLogViewModel,
-    onNavigateToGoals: () -> Unit = {}
+    onNavigateToGoals: () -> Unit = {},
+    onNavigateToCustomFoods: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -117,6 +120,19 @@ fun DailyFoodLogScreen(
                             text = "Snaxlog",
                             style = MaterialTheme.typography.titleLarge
                         )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = onNavigateToCustomFoods,
+                            modifier = Modifier.semantics {
+                                contentDescription = "My Foods"
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Restaurant,
+                                contentDescription = null
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
