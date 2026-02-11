@@ -153,3 +153,12 @@ val TodayIndicatorDark = Color(0xFF81C784)
 // Future date disabled state
 val FutureDateDisabledLight = Color(0xFFBDBDBD)
 val FutureDateDisabledDark = Color(0xFF616161)
+
+// EPIC-006: Custom Food and Recipe Badge Colors
+// Custom Food Badge - Teal (user-created simple foods)
+val CustomFoodLight = Color(0xFF00897B)
+val CustomFoodDark = Color(0xFF4DB6AC)
+
+// Recipe Badge - Purple (user-created recipes)
+val RecipeLight = Color(0xFF7B1FA2)
+val RecipeDark = Color(0xFFBA68C8)
