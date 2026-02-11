@@ -9,20 +9,31 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.snaxlog.app.data.local.dao.CalorieGoalDao
 import com.snaxlog.app.data.local.dao.FoodDao
 import com.snaxlog.app.data.local.dao.FoodIntakeEntryDao
+import com.snaxlog.app.data.local.dao.RecipeIngredientDao
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
+import com.snaxlog.app.data.local.entity.RecipeIngredientEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Main Room database for Snaxlog app.
+ *
+ * Version History:
+ * - v1, v2: Initial versions
+ * - v3: FIP-005 - Added mealCategory to food_intake_entries
+ * - v4: EPIC-006 - Added custom food fields and recipe_ingredients table
+ */
 @Database(
     entities = [
         FoodEntity::class,
         FoodIntakeEntryEntity::class,
-        CalorieGoalEntity::class
+        CalorieGoalEntity::class,
+        RecipeIngredientEntity::class  // EPIC-006: Recipe ingredients
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -31,6 +42,7 @@ abstract class SnaxlogDatabase : RoomDatabase() {
     abstract fun foodDao(): FoodDao
     abstract fun foodIntakeEntryDao(): FoodIntakeEntryDao
     abstract fun calorieGoalDao(): CalorieGoalDao
+    abstract fun recipeIngredientDao(): RecipeIngredientDao  // EPIC-006
 
     companion object {
         const val DATABASE_NAME = "snaxlog_database"
