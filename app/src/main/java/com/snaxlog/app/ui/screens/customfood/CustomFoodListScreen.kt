@@ -38,7 +38,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -82,6 +84,7 @@ fun CustomFoodListScreen(
     val listState by viewModel.listState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val numberFormat = NumberFormat.getNumberInstance()
+    var showCreateOptionsDialog by remember { mutableStateOf(false) }
 
     // Handle snackbar messages
     LaunchedEffect(listState.snackbarMessage) {
@@ -118,13 +121,13 @@ fun CustomFoodListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onNavigateToCreateFood,
+                onClick = { showCreateOptionsDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add custom food"
+                    contentDescription = "Add custom food or recipe"
                 )
             }
         },
@@ -219,6 +222,21 @@ fun CustomFoodListScreen(
             warningMessage = listState.deleteWarningMessage,
             onConfirm = { viewModel.confirmDeleteFood() },
             onDismiss = { viewModel.dismissDeleteDialog() }
+        )
+    }
+
+    // Create Options Dialog
+    if (showCreateOptionsDialog) {
+        CreateOptionsDialog(
+            onCreateFood = {
+                showCreateOptionsDialog = false
+                onNavigateToCreateFood()
+            },
+            onCreateRecipe = {
+                showCreateOptionsDialog = false
+                onNavigateToCreateRecipe()
+            },
+            onDismiss = { showCreateOptionsDialog = false }
         )
     }
 }
@@ -416,6 +434,41 @@ private fun DeleteCustomFoodDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
+            }
+        }
+    )
+}
+
+/**
+ * Dialog for choosing between creating a custom food or recipe.
+ */
+@Composable
+private fun CreateOptionsDialog(
+    onCreateFood: () -> Unit,
+    onCreateRecipe: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Create New")
+        },
+        text = {
+            Column {
+                Text(
+                    text = "What would you like to create?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onCreateFood) {
+                Text("Custom Food")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCreateRecipe) {
+                Text("Recipe")
             }
         }
     )
