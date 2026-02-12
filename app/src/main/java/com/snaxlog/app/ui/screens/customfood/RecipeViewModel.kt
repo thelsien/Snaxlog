@@ -122,6 +122,17 @@ class RecipeViewModel @Inject constructor(
                         .filter { it.food != null }
                         .mapIndexed { index, ingredientWithFood ->
                             val food = ingredientWithFood.food!!
+                            // Determine serving display based on food type
+                            val servingSizeDisplay = if (food.isUserCreated) {
+                                "${food.servingSizeValue} ${food.servingUnit.abbreviation}"
+                            } else {
+                                food.servingSize
+                            }
+                            val servingSizeValue = if (food.isUserCreated) {
+                                food.servingSizeValue
+                            } else {
+                                food.servingWeightGrams.takeIf { it > 0 } ?: 1.0
+                            }
                             IngredientItem(
                                 id = ingredientWithFood.ingredient.id,
                                 foodId = food.id,
@@ -131,7 +142,9 @@ class RecipeViewModel @Inject constructor(
                                 caloriesPerServing = food.caloriesPerServing,
                                 proteinPerServing = food.proteinPerServing,
                                 fatPerServing = food.fatPerServing,
-                                carbsPerServing = food.carbsPerServing
+                                carbsPerServing = food.carbsPerServing,
+                                servingSizeValue = servingSizeValue,
+                                servingSizeDisplay = servingSizeDisplay
                             )
                         }
 
@@ -324,6 +337,18 @@ class RecipeViewModel @Inject constructor(
             return
         }
 
+        // Determine serving display based on food type
+        val servingSizeDisplay = if (food.isUserCreated) {
+            "${food.servingSizeValue} ${food.servingUnit.abbreviation}"
+        } else {
+            food.servingSize
+        }
+        val servingSizeValue = if (food.isUserCreated) {
+            food.servingSizeValue
+        } else {
+            food.servingWeightGrams.takeIf { it > 0 } ?: 1.0
+        }
+
         val newIngredient = IngredientItem(
             id = tempIngredientIdCounter--,
             foodId = food.id,
@@ -333,7 +358,9 @@ class RecipeViewModel @Inject constructor(
             caloriesPerServing = food.caloriesPerServing,
             proteinPerServing = food.proteinPerServing,
             fatPerServing = food.fatPerServing,
-            carbsPerServing = food.carbsPerServing
+            carbsPerServing = food.carbsPerServing,
+            servingSizeValue = servingSizeValue,
+            servingSizeDisplay = servingSizeDisplay
         )
 
         _formState.update {

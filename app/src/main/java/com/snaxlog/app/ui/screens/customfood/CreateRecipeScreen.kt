@@ -468,9 +468,15 @@ private fun IngredientPickerContent(
 
             Spacer(modifier = Modifier.height(Spacing.base))
 
-            // Food info
+            // Food info - use appropriate serving display based on food type
+            val servingDisplay = if (food.isUserCreated) {
+                "${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}"
+            } else {
+                food.servingSize
+            }
+
             Text(
-                text = "Nutrition per ${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}:",
+                text = "Nutrition per $servingDisplay:",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -488,7 +494,7 @@ private fun IngredientPickerContent(
                 onValueChange = { viewModel.updateIngredientQuantity(it) },
                 label = { Text("Servings") },
                 supportingText = {
-                    Text("1 serving = ${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.displayName}")
+                    Text("1 serving = $servingDisplay")
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -530,6 +536,13 @@ private fun FoodPickerItem(
     numberFormat: NumberFormat,
     onClick: () -> Unit
 ) {
+    // For pre-loaded foods, use servingSize string; for custom foods, use servingSizeValue + unit
+    val servingDisplay = if (food.isUserCreated) {
+        "${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}"
+    } else {
+        food.servingSize
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -562,7 +575,7 @@ private fun FoodPickerItem(
                 }
             }
             Text(
-                text = "${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}",
+                text = servingDisplay,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

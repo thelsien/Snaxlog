@@ -41,8 +41,17 @@ data class IngredientItem(
     val caloriesPerServing: Int,
     val proteinPerServing: Double,
     val fatPerServing: Double,
-    val carbsPerServing: Double
+    val carbsPerServing: Double,
+    /** Numeric serving size value for calculating total amount */
+    val servingSizeValue: Double = 1.0,
+    /** Human-readable serving description (e.g., "100g" or "1 cup") for display */
+    val servingSizeDisplay: String = ""
 ) {
+    /**
+     * Calculate total serving amount for display (quantity × servingSizeValue).
+     */
+    val totalServingAmount: Double
+        get() = quantity * servingSizeValue
     /**
      * Calculate total calories for this ingredient quantity.
      */
@@ -148,8 +157,22 @@ fun IngredientListItem(
                 overflow = TextOverflow.Ellipsis
             )
 
+            // Show total amount: quantity × servingSizeValue with unit
+            // e.g., "2 servings × 100g = 200g" simplified to "200g"
+            val displayText = if (ingredient.servingSizeDisplay.isNotEmpty()) {
+                // For pre-loaded foods, show quantity × parsed serving or just "X servings of [serving]"
+                if (ingredient.quantity == 1.0) {
+                    ingredient.servingSizeDisplay
+                } else {
+                    "${ingredient.quantity.formatForDisplay()} × ${ingredient.servingSizeDisplay}"
+                }
+            } else {
+                // For custom foods with numeric serving size
+                val totalAmount = ingredient.totalServingAmount
+                "${totalAmount.formatForDisplay()} ${ingredient.unit.abbreviation}"
+            }
             Text(
-                text = "${ingredient.quantity.formatForDisplay()} ${ingredient.unit.abbreviation}",
+                text = displayText,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -236,8 +259,19 @@ fun IngredientListItemCompact(
 
             Spacer(modifier = Modifier.width(Spacing.sm))
 
+            // Show total amount with serving info
+            val displayText = if (ingredient.servingSizeDisplay.isNotEmpty()) {
+                if (ingredient.quantity == 1.0) {
+                    "(${ingredient.servingSizeDisplay})"
+                } else {
+                    "(${ingredient.quantity.formatForDisplay()} × ${ingredient.servingSizeDisplay})"
+                }
+            } else {
+                val totalAmount = ingredient.totalServingAmount
+                "(${totalAmount.formatForDisplay()} ${ingredient.unit.abbreviation})"
+            }
             Text(
-                text = "(${ingredient.quantity.formatForDisplay()} ${ingredient.unit.abbreviation})",
+                text = displayText,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
