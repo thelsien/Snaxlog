@@ -1,5 +1,12 @@
 package com.snaxlog.app.ui.screens.customfood
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,11 +20,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -43,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,7 +97,7 @@ fun CustomFoodListScreen(
     val listState by viewModel.listState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val numberFormat = NumberFormat.getNumberInstance()
-    var showCreateOptionsDialog by remember { mutableStateOf(false) }
+    var isFabExpanded by remember { mutableStateOf(false) }
 
     // Handle snackbar messages
     LaunchedEffect(listState.snackbarMessage) {
@@ -120,16 +133,18 @@ fun CustomFoodListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showCreateOptionsDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add custom food or recipe"
-                )
-            }
+            ExpandableFab(
+                expanded = isFabExpanded,
+                onExpandedChange = { isFabExpanded = it },
+                onCreateFood = {
+                    isFabExpanded = false
+                    onNavigateToCreateFood()
+                },
+                onCreateRecipe = {
+                    isFabExpanded = false
+                    onNavigateToCreateRecipe()
+                }
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -222,21 +237,6 @@ fun CustomFoodListScreen(
             warningMessage = listState.deleteWarningMessage,
             onConfirm = { viewModel.confirmDeleteFood() },
             onDismiss = { viewModel.dismissDeleteDialog() }
-        )
-    }
-
-    // Create Options Dialog
-    if (showCreateOptionsDialog) {
-        CreateOptionsDialog(
-            onCreateFood = {
-                showCreateOptionsDialog = false
-                onNavigateToCreateFood()
-            },
-            onCreateRecipe = {
-                showCreateOptionsDialog = false
-                onNavigateToCreateRecipe()
-            },
-            onDismiss = { showCreateOptionsDialog = false }
         )
     }
 }
@@ -440,38 +440,109 @@ private fun DeleteCustomFoodDialog(
 }
 
 /**
- * Dialog for choosing between creating a custom food or recipe.
+ * Expandable FAB with options for creating custom food or recipe.
+ * Speed Dial pattern for Material Design.
  */
 @Composable
-private fun CreateOptionsDialog(
+private fun ExpandableFab(
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     onCreateFood: () -> Unit,
-    onCreateRecipe: () -> Unit,
-    onDismiss: () -> Unit
+    onCreateRecipe: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = "Create New")
-        },
-        text = {
-            Column {
-                Text(
-                    text = "What would you like to create?",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onCreateFood) {
-                Text("Custom Food")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onCreateRecipe) {
-                Text("Recipe")
+    val rotation by animateFloatAsState(
+        targetValue = if (expanded) 45f else 0f,
+        label = "fab_rotation"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.End
+    ) {
+        // Expandable options
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                // Recipe option
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "Recipe",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    SmallFloatingActionButton(
+                        onClick = onCreateRecipe,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = "Create recipe"
+                        )
+                    }
+                }
+
+                // Custom food option
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "Custom Food",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    SmallFloatingActionButton(
+                        onClick = onCreateFood,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Fastfood,
+                            contentDescription = "Create custom food"
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(Spacing.xs))
             }
         }
-    )
+
+        // Main FAB
+        FloatingActionButton(
+            onClick = { onExpandedChange(!expanded) },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            Icon(
+                imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
+                contentDescription = if (expanded) "Close menu" else "Add custom food or recipe",
+                modifier = Modifier.rotate(rotation)
+            )
+        }
+    }
 }
 
 /**
