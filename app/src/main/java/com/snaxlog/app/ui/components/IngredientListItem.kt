@@ -75,11 +75,11 @@ data class IngredientItem(
  *
  * Displays a single ingredient in a recipe with its quantity and calculated nutrition.
  * Includes drag handle for reordering and remove button.
+ * The serving unit is fixed to the food's original unit - only quantity can be changed.
  *
  * @param ingredient The ingredient data to display.
  * @param index Display index (1-based) for ordering indication.
  * @param onQuantityChange Callback when quantity is changed.
- * @param onUnitChange Callback when unit is changed.
  * @param onRemove Callback when remove button is clicked.
  * @param modifier Modifier for the component.
  * @param showDragHandle Whether to show the drag handle for reordering.
@@ -89,7 +89,6 @@ fun IngredientListItem(
     ingredient: IngredientItem,
     index: Int,
     onQuantityChange: (Double) -> Unit,
-    onUnitChange: (ServingUnit) -> Unit,
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
     showDragHandle: Boolean = true

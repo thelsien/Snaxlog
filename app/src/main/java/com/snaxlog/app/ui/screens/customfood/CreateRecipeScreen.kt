@@ -63,7 +63,6 @@ import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodTypeBadge
 import com.snaxlog.app.ui.components.IngredientListItem
 import com.snaxlog.app.ui.components.RecipeNutritionSummary
-import com.snaxlog.app.ui.components.ServingUnitDropdownCompact
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
 
@@ -285,9 +284,6 @@ fun CreateRecipeScreen(
                                     onQuantityChange = { newQty ->
                                         viewModel.updateIngredientInList(ingredient.id, newQty)
                                     },
-                                    onUnitChange = { newUnit ->
-                                        viewModel.updateIngredientUnitInList(ingredient.id, newUnit)
-                                    },
                                     onRemove = { viewModel.removeIngredient(ingredient.id) },
                                     showDragHandle = false
                                 )
@@ -486,27 +482,18 @@ private fun IngredientPickerContent(
 
             Spacer(modifier = Modifier.height(Spacing.base))
 
-            // Quantity input
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = formState.ingredientQuantityInput,
-                    onValueChange = { viewModel.updateIngredientQuantity(it) },
-                    label = { Text("Quantity") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.weight(1f)
-                )
-
-                ServingUnitDropdownCompact(
-                    selectedUnit = formState.ingredientUnit,
-                    onUnitChange = { viewModel.updateIngredientUnit(it) },
-                    modifier = Modifier.width(100.dp)
-                )
-            }
+            // Quantity input - uses food's serving unit
+            OutlinedTextField(
+                value = formState.ingredientQuantityInput,
+                onValueChange = { viewModel.updateIngredientQuantity(it) },
+                label = { Text("Servings") },
+                supportingText = {
+                    Text("1 serving = ${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.displayName}")
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(Spacing.xl))
 
