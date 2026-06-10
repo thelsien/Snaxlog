@@ -39,6 +39,21 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            // mockk-android brings in JUnit Jupiter transitively, which duplicates these
+            // license/notice metadata files; exclude them from the androidTest APK merge.
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+                "META-INF/LICENSE",
+                "META-INF/NOTICE.md",
+                "META-INF/NOTICE",
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1"
+            )
+        }
+    }
 }
 
 kotlin {
@@ -94,4 +109,14 @@ dependencies {
     testImplementation(libs.arch.core.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Compose UI testing (End-to-Mock): uses the existing Compose BOM.
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.activity.compose)
+    androidTestImplementation(libs.androidx.navigation.compose)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.mockk.android)
+    // Note: androidx-compose-ui-test-manifest is already declared as debugImplementation above;
+    // it provides the empty activity used by createAndroidComposeRule/createComposeRule.
 }
