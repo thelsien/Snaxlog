@@ -1,11 +1,8 @@
 package com.snaxlog.app.data.local.database
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.snaxlog.app.data.local.dao.CalorieGoalDao
 import com.snaxlog.app.data.local.dao.FoodDao
 import com.snaxlog.app.data.local.dao.FoodIntakeEntryDao
@@ -14,9 +11,6 @@ import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
 import com.snaxlog.app.data.local.entity.RecipeIngredientEntity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * Main Room database for Snaxlog app.
@@ -87,15 +81,5 @@ abstract class SnaxlogDatabase : RoomDatabase() {
             )
         )
 
-        fun createCallback(scope: CoroutineScope): Callback {
-            return object : Callback() {
-                override fun onCreate(db: SupportSQLiteDatabase) {
-                    super.onCreate(db)
-                    scope.launch(Dispatchers.IO) {
-                        // This will be handled by the DatabaseInitializer
-                    }
-                }
-            }
-        }
     }
 }
