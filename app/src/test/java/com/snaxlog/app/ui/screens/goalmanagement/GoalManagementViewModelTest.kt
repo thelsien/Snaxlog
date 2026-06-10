@@ -1,5 +1,7 @@
 package com.snaxlog.app.ui.screens.goalmanagement
 
+import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.repository.CalorieGoalRepository
 import io.mockk.coEvery
@@ -218,7 +220,7 @@ class GoalManagementViewModelTest {
         advanceUntilIdle()
 
         assertNotNull(viewModel.uiState.value.error)
-        assertEquals("Failed to set active goal. Please try again.", viewModel.uiState.value.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_set_active_failed), viewModel.uiState.value.error)
     }
 
     // ============================================================
@@ -287,7 +289,7 @@ class GoalManagementViewModelTest {
                         !goal.isActive
             })
         }
-        assertEquals("Goal saved", viewModel.uiState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.goal_msg_saved), viewModel.uiState.value.snackbarMessage)
     }
 
     @Test
@@ -300,7 +302,7 @@ class GoalManagementViewModelTest {
         viewModel.saveGoal()
         advanceUntilIdle()
 
-        assertEquals("Goal name cannot be empty", viewModel.formState.value.nameError)
+        assertEquals(UiText.StringResource(R.string.goal_error_name_empty), viewModel.formState.value.nameError)
         coVerify(exactly = 0) { calorieGoalRepository.addGoal(any()) }
     }
 
@@ -314,7 +316,7 @@ class GoalManagementViewModelTest {
         viewModel.saveGoal()
         advanceUntilIdle()
 
-        assertEquals("Calorie target is required", viewModel.formState.value.calorieError)
+        assertEquals(UiText.StringResource(R.string.goal_error_calorie_required), viewModel.formState.value.calorieError)
         coVerify(exactly = 0) { calorieGoalRepository.addGoal(any()) }
     }
 
@@ -360,7 +362,7 @@ class GoalManagementViewModelTest {
         viewModel.openAddGoalForm()
         viewModel.updateCalorieTarget("0")
 
-        assertEquals("Calorie goal must be greater than 0", viewModel.formState.value.calorieError)
+        assertEquals(UiText.StringResource(R.string.goal_error_calorie_positive), viewModel.formState.value.calorieError)
     }
 
     @Test
@@ -368,7 +370,7 @@ class GoalManagementViewModelTest {
         viewModel.openAddGoalForm()
         viewModel.updateCalorieTarget("-500")
 
-        assertEquals("Calorie goal must be greater than 0", viewModel.formState.value.calorieError)
+        assertEquals(UiText.StringResource(R.string.goal_error_calorie_positive), viewModel.formState.value.calorieError)
     }
 
     @Test
@@ -376,7 +378,7 @@ class GoalManagementViewModelTest {
         viewModel.openAddGoalForm()
         viewModel.updateCalorieTarget("abc")
 
-        assertEquals("Please enter a valid number", viewModel.formState.value.calorieError)
+        assertEquals(UiText.StringResource(R.string.goal_error_invalid_number), viewModel.formState.value.calorieError)
     }
 
     @Test
@@ -384,7 +386,7 @@ class GoalManagementViewModelTest {
         viewModel.openAddGoalForm()
         viewModel.updateGoalName("   ")
 
-        assertEquals("Goal name cannot be empty", viewModel.formState.value.nameError)
+        assertEquals(UiText.StringResource(R.string.goal_error_name_empty), viewModel.formState.value.nameError)
     }
 
     @Test
@@ -418,7 +420,13 @@ class GoalManagementViewModelTest {
         viewModel.openAddGoalForm()
         viewModel.updateProteinTarget("-10")
 
-        assertEquals("Protein target cannot be negative", viewModel.formState.value.proteinError)
+        assertEquals(
+            UiText.StringResource(
+                R.string.goal_error_macro_negative,
+                listOf(UiText.StringResource(R.string.goal_macro_protein))
+            ),
+            viewModel.formState.value.proteinError
+        )
     }
 
     @Test
@@ -426,7 +434,7 @@ class GoalManagementViewModelTest {
         viewModel.openAddGoalForm()
         viewModel.updateFatTarget("abc")
 
-        assertEquals("Please enter a valid number", viewModel.formState.value.fatError)
+        assertEquals(UiText.StringResource(R.string.goal_error_invalid_number), viewModel.formState.value.fatError)
     }
 
     @Test
@@ -477,7 +485,7 @@ class GoalManagementViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.formState.value.isSaving)
-        assertEquals("Failed to save goal. Please try again.", viewModel.uiState.value.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_save_failed), viewModel.uiState.value.error)
     }
 
     // ============================================================
@@ -539,7 +547,7 @@ class GoalManagementViewModelTest {
                         goal.calorieTarget == 1900
             })
         }
-        assertEquals("Goal saved", viewModel.uiState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.goal_msg_saved), viewModel.uiState.value.snackbarMessage)
     }
 
     @Test
@@ -551,7 +559,7 @@ class GoalManagementViewModelTest {
         advanceUntilIdle()
 
         val form = viewModel.formState.value
-        assertEquals("Pre-defined goals cannot be edited", form.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_predefined_not_editable), form.error)
     }
 
     @Test
@@ -564,7 +572,7 @@ class GoalManagementViewModelTest {
 
         viewModel.updateCalorieTarget("0")
 
-        assertEquals("Calorie goal must be greater than 0", viewModel.formState.value.calorieError)
+        assertEquals(UiText.StringResource(R.string.goal_error_calorie_positive), viewModel.formState.value.calorieError)
     }
 
     @Test
@@ -576,7 +584,7 @@ class GoalManagementViewModelTest {
         advanceUntilIdle()
 
         val form = viewModel.formState.value
-        assertEquals("Goal no longer exists", form.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_goal_missing), form.error)
         assertFalse(form.isLoading)
     }
 
@@ -594,7 +602,7 @@ class GoalManagementViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.formState.value.isSaving)
-        assertEquals("Failed to save goal. Please try again.", viewModel.uiState.value.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_save_failed), viewModel.uiState.value.error)
     }
 
     @Test
@@ -624,7 +632,7 @@ class GoalManagementViewModelTest {
         viewModel.saveGoal()
         advanceUntilIdle()
 
-        assertEquals("Goal no longer exists", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_goal_missing), viewModel.formState.value.error)
     }
 
     // ============================================================
@@ -651,7 +659,7 @@ class GoalManagementViewModelTest {
         advanceUntilIdle()
 
         coVerify { calorieGoalRepository.deleteGoal(10L) }
-        assertEquals("Goal deleted", viewModel.uiState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.goal_msg_deleted), viewModel.uiState.value.snackbarMessage)
     }
 
     @Test
@@ -730,7 +738,7 @@ class GoalManagementViewModelTest {
 
         assertNull(viewModel.uiState.value.deleteDialogGoal)
         assertNotNull(viewModel.uiState.value.error)
-        assertEquals("Failed to delete goal. Please try again.", viewModel.uiState.value.error)
+        assertEquals(UiText.StringResource(R.string.goal_error_delete_failed), viewModel.uiState.value.error)
     }
 
     @Test
@@ -774,7 +782,7 @@ class GoalManagementViewModelTest {
         viewModel.confirmDeleteGoal()
         advanceUntilIdle()
 
-        assertEquals("Goal deleted", viewModel.uiState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.goal_msg_deleted), viewModel.uiState.value.snackbarMessage)
 
         viewModel.clearSnackbar()
         assertNull(viewModel.uiState.value.snackbarMessage)

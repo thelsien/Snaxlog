@@ -2,8 +2,11 @@ package com.snaxlog.app.ui.screens.goalmanagement
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.repository.CalorieGoalRepository
+import com.snaxlog.app.ui.common.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +23,9 @@ data class GoalManagementUiState(
     val goals: List<CalorieGoalEntity> = emptyList(),
     val activeGoalId: Long? = null,
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: UiText? = null,
     val deleteDialogGoal: CalorieGoalEntity? = null,
-    val snackbarMessage: String? = null
+    val snackbarMessage: UiText? = null
 )
 
 /**
@@ -32,18 +35,18 @@ data class GoalFormUiState(
     val isEditMode: Boolean = false,
     val editingGoalId: Long? = null,
     val nameInput: String = "",
-    val nameError: String? = null,
+    val nameError: UiText? = null,
     val calorieInput: String = "",
-    val calorieError: String? = null,
+    val calorieError: UiText? = null,
     val proteinInput: String = "",
-    val proteinError: String? = null,
+    val proteinError: UiText? = null,
     val fatInput: String = "",
-    val fatError: String? = null,
+    val fatError: UiText? = null,
     val carbsInput: String = "",
-    val carbsError: String? = null,
+    val carbsError: UiText? = null,
     val isSaving: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: UiText? = null
 )
 
 @HiltViewModel
@@ -97,7 +100,7 @@ class GoalManagementViewModel @Inject constructor(
                 // No snackbar needed for selection, visual indicator is enough
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(error = "Failed to set active goal. Please try again.")
+                    it.copy(error = UiText.StringResource(R.string.goal_error_set_active_failed))
                 }
             }
         }
@@ -126,7 +129,7 @@ class GoalManagementViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         deleteDialogGoal = null,
-                        snackbarMessage = "Goal deleted"
+                        snackbarMessage = UiText.StringResource(R.string.goal_msg_deleted)
                     )
                 }
                 // AC-045: If deleted goal was active, activeGoalId will update
@@ -135,7 +138,7 @@ class GoalManagementViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         deleteDialogGoal = null,
-                        error = "Failed to delete goal. Please try again."
+                        error = UiText.StringResource(R.string.goal_error_delete_failed)
                     )
                 }
             }
@@ -171,7 +174,7 @@ class GoalManagementViewModel @Inject constructor(
                     // AC-042: Pre-defined goals cannot be edited
                     if (goal.isPredefined) {
                         _formState.update {
-                            it.copy(isLoading = false, error = "Pre-defined goals cannot be edited")
+                            it.copy(isLoading = false, error = UiText.StringResource(R.string.goal_error_predefined_not_editable))
                         }
                         return@launch
                     }
@@ -191,12 +194,12 @@ class GoalManagementViewModel @Inject constructor(
                 } else {
                     // EC-071: Goal deleted while trying to edit
                     _formState.update {
-                        it.copy(isLoading = false, error = "Goal no longer exists")
+                        it.copy(isLoading = false, error = UiText.StringResource(R.string.goal_error_goal_missing))
                     }
                 }
             } catch (e: Exception) {
                 _formState.update {
-                    it.copy(isLoading = false, error = "Failed to load goal")
+                    it.copy(isLoading = false, error = UiText.StringResource(R.string.goal_error_load_failed))
                 }
             }
         }
@@ -219,17 +222,17 @@ class GoalManagementViewModel @Inject constructor(
     }
 
     fun updateProteinTarget(input: String) {
-        val error = validateOptionalMacro(input, "Protein")
+        val error = validateOptionalMacro(input, R.string.goal_macro_protein)
         _formState.update { it.copy(proteinInput = input, proteinError = error) }
     }
 
     fun updateFatTarget(input: String) {
-        val error = validateOptionalMacro(input, "Fat")
+        val error = validateOptionalMacro(input, R.string.goal_macro_fat)
         _formState.update { it.copy(fatInput = input, fatError = error) }
     }
 
     fun updateCarbsTarget(input: String) {
-        val error = validateOptionalMacro(input, "Carbs")
+        val error = validateOptionalMacro(input, R.string.goal_macro_carbs)
         _formState.update { it.copy(carbsInput = input, carbsError = error) }
     }
 
@@ -243,9 +246,9 @@ class GoalManagementViewModel @Inject constructor(
         // Validate all fields
         val nameError = validateGoalName(state.nameInput)
         val calorieError = validateCalorieTarget(state.calorieInput)
-        val proteinError = validateOptionalMacro(state.proteinInput, "Protein")
-        val fatError = validateOptionalMacro(state.fatInput, "Fat")
-        val carbsError = validateOptionalMacro(state.carbsInput, "Carbs")
+        val proteinError = validateOptionalMacro(state.proteinInput, R.string.goal_macro_protein)
+        val fatError = validateOptionalMacro(state.fatInput, R.string.goal_macro_fat)
+        val carbsError = validateOptionalMacro(state.carbsInput, R.string.goal_macro_carbs)
 
         if (nameError != null || calorieError != null || proteinError != null ||
             fatError != null || carbsError != null
@@ -281,7 +284,7 @@ class GoalManagementViewModel @Inject constructor(
                     val existingGoal = calorieGoalRepository.getGoalById(state.editingGoalId)
                     if (existingGoal == null) {
                         _formState.update {
-                            it.copy(isSaving = false, error = "Goal no longer exists")
+                            it.copy(isSaving = false, error = UiText.StringResource(R.string.goal_error_goal_missing))
                         }
                         return@launch
                     }
@@ -294,7 +297,7 @@ class GoalManagementViewModel @Inject constructor(
                     )
                     calorieGoalRepository.updateGoal(updatedGoal)
                     _formState.update { it.copy(isSaving = false) }
-                    _uiState.update { it.copy(snackbarMessage = "Goal saved") }
+                    _uiState.update { it.copy(snackbarMessage = UiText.StringResource(R.string.goal_msg_saved)) }
                 } else {
                     // Create new goal
                     val newGoal = CalorieGoalEntity(
@@ -308,11 +311,11 @@ class GoalManagementViewModel @Inject constructor(
                     )
                     calorieGoalRepository.addGoal(newGoal)
                     _formState.update { it.copy(isSaving = false) }
-                    _uiState.update { it.copy(snackbarMessage = "Goal saved") }
+                    _uiState.update { it.copy(snackbarMessage = UiText.StringResource(R.string.goal_msg_saved)) }
                 }
             } catch (e: Exception) {
                 _formState.update { it.copy(isSaving = false) }
-                _uiState.update { it.copy(error = "Failed to save goal. Please try again.") }
+                _uiState.update { it.copy(error = UiText.StringResource(R.string.goal_error_save_failed)) }
             }
         }
     }
@@ -321,32 +324,37 @@ class GoalManagementViewModel @Inject constructor(
     // Validation
     // ============================
 
-    private fun validateGoalName(name: String): String? {
+    private fun validateGoalName(name: String): UiText? {
         // AC-036, EC-062: Goal name cannot be empty or whitespace
-        if (name.isBlank()) return "Goal name cannot be empty"
+        if (name.isBlank()) return UiText.StringResource(R.string.goal_error_name_empty)
         return null
     }
 
-    private fun validateCalorieTarget(input: String): String? {
-        if (input.isBlank()) return "Calorie target is required"
+    private fun validateCalorieTarget(input: String): UiText? {
+        if (input.isBlank()) return UiText.StringResource(R.string.goal_error_calorie_required)
 
         val value = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.goal_error_invalid_number)
 
         // EC-057: Zero calories
         // EC-058: Negative calories
-        if (value <= 0) return "Calorie goal must be greater than 0"
+        if (value <= 0) return UiText.StringResource(R.string.goal_error_calorie_positive)
 
         return null
     }
 
-    private fun validateOptionalMacro(input: String, name: String): String? {
+    private fun validateOptionalMacro(input: String, @StringRes nameRes: Int): UiText? {
         if (input.isBlank()) return null // Optional field
 
         val value = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.goal_error_invalid_number)
 
-        if (value < 0) return "$name target cannot be negative"
+        if (value < 0) {
+            return UiText.StringResource(
+                R.string.goal_error_macro_negative,
+                listOf(UiText.StringResource(nameRes))
+            )
+        }
 
         return null
     }

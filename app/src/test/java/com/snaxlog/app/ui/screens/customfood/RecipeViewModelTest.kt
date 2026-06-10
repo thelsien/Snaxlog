@@ -1,5 +1,7 @@
 package com.snaxlog.app.ui.screens.customfood
 
+import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.data.local.entity.RecipeIngredientEntity
@@ -135,7 +137,7 @@ class RecipeViewModelTest {
         viewModel.updateNumberOfServings("0")
         advanceUntilIdle()
 
-        assertEquals("Must be greater than 0", viewModel.formState.value.numberOfServingsError)
+        assertEquals(UiText.StringResource(R.string.recipe_error_servings_positive), viewModel.formState.value.numberOfServingsError)
     }
 
     @Test
@@ -213,7 +215,7 @@ class RecipeViewModelTest {
         viewModel.confirmAddIngredient()
         advanceUntilIdle()
 
-        assertEquals("Please enter a valid quantity", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.recipe_error_invalid_quantity), viewModel.formState.value.error)
         assertTrue(viewModel.formState.value.ingredients.isEmpty())
     }
 
@@ -321,7 +323,7 @@ class RecipeViewModelTest {
         viewModel.saveRecipe()
         advanceUntilIdle()
 
-        assertEquals("Add at least one ingredient", viewModel.formState.value.ingredientsError)
+        assertEquals(UiText.StringResource(R.string.recipe_error_min_ingredient), viewModel.formState.value.ingredientsError)
         assertFalse(viewModel.formState.value.saveSuccess)
     }
 
@@ -334,7 +336,7 @@ class RecipeViewModelTest {
         viewModel.saveRecipe()
         advanceUntilIdle()
 
-        assertEquals("Recipe name is required", viewModel.formState.value.nameError)
+        assertEquals(UiText.StringResource(R.string.recipe_error_name_required), viewModel.formState.value.nameError)
         assertFalse(viewModel.formState.value.saveSuccess)
     }
 
@@ -393,7 +395,7 @@ class RecipeViewModelTest {
         viewModel.openEditForm(999L)
         advanceUntilIdle()
 
-        assertEquals("Recipe not found", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.recipe_error_not_found), viewModel.formState.value.error)
     }
 
     @Test
@@ -405,7 +407,7 @@ class RecipeViewModelTest {
         viewModel.openEditForm(1L)
         advanceUntilIdle()
 
-        assertEquals("This is not a recipe", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.recipe_error_not_recipe), viewModel.formState.value.error)
     }
 
     @Test

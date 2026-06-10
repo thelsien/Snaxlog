@@ -1,5 +1,7 @@
 package com.snaxlog.app.ui.screens.customfood
 
+import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.data.local.entity.ServingUnit
@@ -102,7 +104,7 @@ class CustomFoodViewModelTest {
         viewModel.updateName("   ")
         advanceUntilIdle()
 
-        assertEquals("Food name is required", viewModel.formState.value.nameError)
+        assertEquals(UiText.StringResource(R.string.custom_food_error_name_required), viewModel.formState.value.nameError)
     }
 
     @Test
@@ -134,7 +136,7 @@ class CustomFoodViewModelTest {
         viewModel.updateServingSize("0")
         advanceUntilIdle()
 
-        assertEquals("Serving size must be greater than 0", viewModel.formState.value.servingSizeError)
+        assertEquals(UiText.StringResource(R.string.custom_food_error_serving_positive), viewModel.formState.value.servingSizeError)
     }
 
     @Test
@@ -219,7 +221,7 @@ class CustomFoodViewModelTest {
             )
         }
         assertTrue(viewModel.formState.value.saveSuccess)
-        assertEquals("Food created", viewModel.listState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.custom_food_msg_created), viewModel.listState.value.snackbarMessage)
     }
 
     @Test
@@ -289,7 +291,7 @@ class CustomFoodViewModelTest {
         viewModel.openEditForm(999L)
         advanceUntilIdle()
 
-        assertEquals("Food not found", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.custom_food_error_not_found), viewModel.formState.value.error)
     }
 
     @Test
@@ -300,7 +302,7 @@ class CustomFoodViewModelTest {
         viewModel.openEditForm(100L)
         advanceUntilIdle()
 
-        assertEquals("This food cannot be edited", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.custom_food_error_not_editable), viewModel.formState.value.error)
     }
 
     @Test
@@ -311,7 +313,7 @@ class CustomFoodViewModelTest {
         viewModel.openEditForm(100L)
         advanceUntilIdle()
 
-        assertEquals("Use recipe editor for recipes", viewModel.formState.value.error)
+        assertEquals(UiText.StringResource(R.string.custom_food_error_use_recipe_editor), viewModel.formState.value.error)
     }
 
     @Test
@@ -338,7 +340,7 @@ class CustomFoodViewModelTest {
             )
         }
         assertTrue(viewModel.formState.value.saveSuccess)
-        assertEquals("Food updated", viewModel.listState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.custom_food_msg_updated), viewModel.listState.value.snackbarMessage)
     }
 
     // ============================================================
@@ -366,8 +368,18 @@ class CustomFoodViewModelTest {
         advanceUntilIdle()
 
         val warning = viewModel.listState.value.deleteWarningMessage
-        assertNotNull(warning)
-        assertTrue(warning!!.contains("5 log entries"))
+        assertEquals(
+            UiText.StringResource(
+                R.string.custom_food_delete_warning_intake,
+                listOf(
+                    UiText.StringResource(
+                        R.string.custom_food_delete_fragment_intake_other,
+                        listOf(5)
+                    )
+                )
+            ),
+            warning
+        )
     }
 
     @Test
@@ -379,8 +391,18 @@ class CustomFoodViewModelTest {
         advanceUntilIdle()
 
         val warning = viewModel.listState.value.deleteWarningMessage
-        assertNotNull(warning)
-        assertTrue(warning!!.contains("3 recipes"))
+        assertEquals(
+            UiText.StringResource(
+                R.string.custom_food_delete_warning_recipe,
+                listOf(
+                    UiText.StringResource(
+                        R.string.custom_food_delete_fragment_recipe_other,
+                        listOf(3)
+                    )
+                )
+            ),
+            warning
+        )
     }
 
     @Test
@@ -421,7 +443,7 @@ class CustomFoodViewModelTest {
 
         coVerify { foodRepository.deleteCustomFood(100L) }
         assertNull(viewModel.listState.value.deleteDialogFood)
-        assertEquals("Food deleted", viewModel.listState.value.snackbarMessage)
+        assertEquals(UiText.StringResource(R.string.custom_food_msg_deleted), viewModel.listState.value.snackbarMessage)
     }
 
     // ============================================================

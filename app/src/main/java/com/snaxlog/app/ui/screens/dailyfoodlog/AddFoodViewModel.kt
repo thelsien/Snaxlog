@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
 import com.snaxlog.app.data.local.entity.MealCategory
+import com.snaxlog.app.R
 import com.snaxlog.app.data.repository.FoodIntakeRepository
 import com.snaxlog.app.data.repository.FoodRepository
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.util.MealCategoryUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +41,7 @@ data class AddFoodUiState(
     val foods: List<FoodEntity> = emptyList(),
     val selectedFood: FoodEntity? = null,
     val servingsInput: String = "1.0",
-    val servingsError: String? = null,
+    val servingsError: UiText? = null,
     val previewCalories: Int = 0,
     val previewProtein: Double = 0.0,
     val previewFat: Double = 0.0,
@@ -259,17 +261,17 @@ class AddFoodViewModel @Inject constructor(
     // Validation (EC-011..EC-015, EC-023)
     // ============================
 
-    private fun validateServings(input: String): String? {
-        if (input.isBlank()) return "Serving size is required"
+    private fun validateServings(input: String): UiText? {
+        if (input.isBlank()) return UiText.StringResource(R.string.food_entry_error_serving_required)
 
         val servings = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.food_entry_error_invalid_number)
 
-        if (servings <= 0) return "Serving size must be greater than 0"
+        if (servings <= 0) return UiText.StringResource(R.string.food_entry_error_serving_positive)
 
         // EC-014: Check decimal places
         if (input.contains(".") && input.substringAfter(".").length > 2) {
-            return "Maximum 2 decimal places"
+            return UiText.StringResource(R.string.food_entry_error_max_decimals)
         }
 
         return null

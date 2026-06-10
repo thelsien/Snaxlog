@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeWithFood
+import com.snaxlog.app.R
 import com.snaxlog.app.data.repository.CalorieGoalRepository
 import com.snaxlog.app.data.repository.FoodIntakeRepository
+import com.snaxlog.app.ui.common.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,9 +82,9 @@ data class DailyFoodLogUiState(
     val fatProgress: NutrientProgress = NutrientProgress(),
     val carbsProgress: NutrientProgress = NutrientProgress(),
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: UiText? = null,
     val deleteDialogEntry: FoodIntakeWithFood? = null,
-    val snackbarMessage: String? = null,
+    val snackbarMessage: UiText? = null,
     // FIP-EPIC-005: Historical Day Viewing fields
     val selectedDate: LocalDate = LocalDate.now(),
     val isViewingToday: Boolean = true,
@@ -329,14 +331,14 @@ class DailyFoodLogViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         deleteDialogEntry = null,
-                        snackbarMessage = "Entry deleted"
+                        snackbarMessage = UiText.StringResource(R.string.daily_log_msg_entry_deleted)
                     )
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         deleteDialogEntry = null,
-                        error = "Failed to delete entry. Please try again."
+                        error = UiText.StringResource(R.string.daily_log_msg_delete_failed)
                     )
                 }
             }
@@ -351,18 +353,17 @@ class DailyFoodLogViewModel @Inject constructor(
      * Displays a snackbar message on the daily log.
      *
      * The add/edit-food flows now live in [AddFoodViewModel] / [EditFoodViewModel]; the screen
-     * forwards their success results here so the snackbar continues to surface on the main
-     * screen. Literals (e.g. "Entry added", "Entry updated") are kept in sync with the
-     * comparisons in DailyFoodLogScreen.
+     * forwards their success results here (as [UiText] resources, e.g. the "Entry added" /
+     * "Entry updated" strings) so the snackbar continues to surface on the main screen.
      */
-    fun showSnackbar(message: String) {
+    fun showSnackbar(message: UiText) {
         _uiState.update { it.copy(snackbarMessage = message) }
     }
 
     /**
      * Surfaces an error message on the daily log (e.g. a failed add/edit save).
      */
-    fun showError(message: String) {
+    fun showError(message: UiText) {
         _uiState.update { it.copy(error = message) }
     }
 

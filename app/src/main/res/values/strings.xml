@@ -387,4 +387,91 @@
     <string name="goal_form_cancel">Cancel</string>
     <string name="goal_form_update">Update</string>
     <string name="goal_form_save">Save</string>
+
+    <!-- ============================================================ -->
+    <!-- ViewModel messages: Daily Food Log (snackbars / errors)      -->
+    <!-- ============================================================ -->
+    <string name="daily_log_msg_entry_deleted">Entry deleted</string>
+    <string name="daily_log_msg_delete_failed">Failed to delete entry. Please try again.</string>
+    <string name="daily_log_msg_entry_added">Entry added</string>
+    <string name="daily_log_msg_entry_updated">Entry updated</string>
+    <string name="daily_log_msg_save_failed">Failed to save entry. Please try again.</string>
+    <string name="daily_log_msg_update_failed">Failed to update entry. Please try again.</string>
+
+    <!-- ============================================================ -->
+    <!-- ViewModel messages: Add / Edit Food validation & errors      -->
+    <!-- ============================================================ -->
+    <string name="food_entry_error_serving_required">Serving size is required</string>
+    <string name="food_entry_error_invalid_number">Please enter a valid number</string>
+    <string name="food_entry_error_serving_positive">Serving size must be greater than 0</string>
+    <string name="food_entry_error_max_decimals">Maximum 2 decimal places</string>
+    <string name="food_entry_error_entry_missing">Entry no longer exists</string>
+    <string name="food_entry_error_load_failed">Failed to load entry</string>
+
+    <!-- ============================================================ -->
+    <!-- ViewModel messages: Goal Management (snackbars / errors)     -->
+    <!-- ============================================================ -->
+    <string name="goal_msg_saved">Goal saved</string>
+    <string name="goal_msg_deleted">Goal deleted</string>
+    <string name="goal_error_set_active_failed">Failed to set active goal. Please try again.</string>
+    <string name="goal_error_delete_failed">Failed to delete goal. Please try again.</string>
+    <string name="goal_error_predefined_not_editable">Pre-defined goals cannot be edited</string>
+    <string name="goal_error_goal_missing">Goal no longer exists</string>
+    <string name="goal_error_load_failed">Failed to load goal</string>
+    <string name="goal_error_save_failed">Failed to save goal. Please try again.</string>
+    <string name="goal_error_name_empty">Goal name cannot be empty</string>
+    <string name="goal_error_calorie_required">Calorie target is required</string>
+    <string name="goal_error_invalid_number">Please enter a valid number</string>
+    <string name="goal_error_calorie_positive">Calorie goal must be greater than 0</string>
+    <string name="goal_error_macro_negative">%1$s target cannot be negative</string>
+    <string name="goal_macro_protein">Protein</string>
+    <string name="goal_macro_fat">Fat</string>
+    <string name="goal_macro_carbs">Carbs</string>
+
+    <!-- ============================================================ -->
+    <!-- ViewModel messages: Custom Food (snackbars / errors)         -->
+    <!-- ============================================================ -->
+    <string name="custom_food_msg_created">Food created</string>
+    <string name="custom_food_msg_updated">Food updated</string>
+    <string name="custom_food_msg_deleted">Food deleted</string>
+    <string name="custom_food_error_not_editable">This food cannot be edited</string>
+    <string name="custom_food_error_use_recipe_editor">Use recipe editor for recipes</string>
+    <string name="custom_food_error_not_found">Food not found</string>
+    <string name="custom_food_error_load_failed">Failed to load food</string>
+    <string name="custom_food_error_save_failed">Failed to save food. Please try again.</string>
+    <string name="custom_food_error_delete_failed">Failed to delete food. Please try again.</string>
+    <string name="custom_food_error_name_required">Food name is required</string>
+    <string name="custom_food_error_serving_required">Serving size is required</string>
+    <string name="custom_food_error_invalid_number">Please enter a valid number</string>
+    <string name="custom_food_error_serving_positive">Serving size must be greater than 0</string>
+    <string name="custom_food_error_macro_required">%1$s is required</string>
+    <string name="custom_food_error_macro_negative">%1$s cannot be negative</string>
+    <string name="custom_food_macro_protein">Protein</string>
+    <string name="custom_food_macro_fat">Fat</string>
+    <string name="custom_food_macro_carbs">Carbs</string>
+    <!-- Delete usage warnings. %1$s is the count fragment (e.g. "2 log entries"); the
+         fragment is positional so singular/plural can be selected per-language. -->
+    <string name="custom_food_delete_fragment_intake_one">%1$d log entry</string>
+    <string name="custom_food_delete_fragment_intake_other">%1$d log entries</string>
+    <string name="custom_food_delete_fragment_recipe_one">%1$d recipe</string>
+    <string name="custom_food_delete_fragment_recipe_other">%1$d recipes</string>
+    <!-- Full warning lines. %1$s is a usage fragment from above. -->
+    <string name="custom_food_delete_warning_intake">This food is used in %1$s. Deleting it will affect these records.</string>
+    <string name="custom_food_delete_warning_recipe">This food is used in %1$s. Deleting it will affect these records.</string>
+    <string name="custom_food_delete_warning_both">This food is used in %1$s. This food is used in %2$s. Deleting it will affect these records.</string>
+
+    <!-- ============================================================ -->
+    <!-- ViewModel messages: Recipe (errors / validation)             -->
+    <!-- ============================================================ -->
+    <string name="recipe_error_not_recipe">This is not a recipe</string>
+    <string name="recipe_error_not_found">Recipe not found</string>
+    <string name="recipe_error_load_failed">Failed to load recipe</string>
+    <string name="recipe_error_load_foods_failed">Failed to load foods</string>
+    <string name="recipe_error_save_failed">Failed to save recipe. Please try again.</string>
+    <string name="recipe_error_invalid_quantity">Please enter a valid quantity</string>
+    <string name="recipe_error_name_required">Recipe name is required</string>
+    <string name="recipe_error_servings_required">Number of servings is required</string>
+    <string name="recipe_error_invalid_number">Please enter a valid number</string>
+    <string name="recipe_error_servings_positive">Must be greater than 0</string>
+    <string name="recipe_error_min_ingredient">Add at least one ingredient</string>
 </resources>

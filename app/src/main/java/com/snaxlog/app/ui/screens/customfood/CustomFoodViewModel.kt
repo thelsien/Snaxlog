@@ -2,10 +2,13 @@ package com.snaxlog.app.ui.screens.customfood
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.data.local.entity.ServingUnit
 import com.snaxlog.app.data.repository.FoodRepository
+import com.snaxlog.app.ui.common.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,21 +28,21 @@ data class CustomFoodFormUiState(
 
     // Form inputs
     val nameInput: String = "",
-    val nameError: String? = null,
+    val nameError: UiText? = null,
 
     val servingSizeInput: String = "",
-    val servingSizeError: String? = null,
+    val servingSizeError: UiText? = null,
 
     val servingUnit: ServingUnit = ServingUnit.GRAM,
 
     val proteinInput: String = "",
-    val proteinError: String? = null,
+    val proteinError: UiText? = null,
 
     val fatInput: String = "",
-    val fatError: String? = null,
+    val fatError: UiText? = null,
 
     val carbsInput: String = "",
-    val carbsError: String? = null,
+    val carbsError: UiText? = null,
 
     // Calculated values
     val calculatedCalories: Int = 0,
@@ -47,7 +50,7 @@ data class CustomFoodFormUiState(
     // State
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
     val duplicateNameWarning: Boolean = false,
     val saveSuccess: Boolean = false
 )
@@ -59,10 +62,10 @@ data class CustomFoodFormUiState(
 data class CustomFoodListUiState(
     val foods: List<FoodEntity> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: UiText? = null,
     val deleteDialogFood: FoodEntity? = null,
-    val deleteWarningMessage: String? = null,
-    val snackbarMessage: String? = null
+    val deleteWarningMessage: UiText? = null,
+    val snackbarMessage: UiText? = null
 )
 
 /**
@@ -132,14 +135,14 @@ class CustomFoodViewModel @Inject constructor(
                     // Verify it's editable
                     if (!food.isEditable) {
                         _formState.update {
-                            it.copy(isLoading = false, error = "This food cannot be edited")
+                            it.copy(isLoading = false, error = UiText.StringResource(R.string.custom_food_error_not_editable))
                         }
                         return@launch
                     }
                     // Verify it's not a recipe (use recipe editor for recipes)
                     if (food.foodType == FoodType.RECIPE) {
                         _formState.update {
-                            it.copy(isLoading = false, error = "Use recipe editor for recipes")
+                            it.copy(isLoading = false, error = UiText.StringResource(R.string.custom_food_error_use_recipe_editor))
                         }
                         return@launch
                     }
@@ -161,12 +164,12 @@ class CustomFoodViewModel @Inject constructor(
                     }
                 } else {
                     _formState.update {
-                        it.copy(isLoading = false, error = "Food not found")
+                        it.copy(isLoading = false, error = UiText.StringResource(R.string.custom_food_error_not_found))
                     }
                 }
             } catch (e: Exception) {
                 _formState.update {
-                    it.copy(isLoading = false, error = "Failed to load food")
+                    it.copy(isLoading = false, error = UiText.StringResource(R.string.custom_food_error_load_failed))
                 }
             }
         }
@@ -232,7 +235,7 @@ class CustomFoodViewModel @Inject constructor(
      */
     fun updateProtein(input: String) {
         val filtered = filterNumericInput(input)
-        val error = validateMacro(filtered, "Protein")
+        val error = validateMacro(filtered, R.string.custom_food_macro_protein)
         _formState.update { it.copy(proteinInput = filtered, proteinError = error) }
         recalculateCalories()
     }
@@ -243,7 +246,7 @@ class CustomFoodViewModel @Inject constructor(
      */
     fun updateFat(input: String) {
         val filtered = filterNumericInput(input)
-        val error = validateMacro(filtered, "Fat")
+        val error = validateMacro(filtered, R.string.custom_food_macro_fat)
         _formState.update { it.copy(fatInput = filtered, fatError = error) }
         recalculateCalories()
     }
@@ -254,7 +257,7 @@ class CustomFoodViewModel @Inject constructor(
      */
     fun updateCarbs(input: String) {
         val filtered = filterNumericInput(input)
-        val error = validateMacro(filtered, "Carbs")
+        val error = validateMacro(filtered, R.string.custom_food_macro_carbs)
         _formState.update { it.copy(carbsInput = filtered, carbsError = error) }
         recalculateCalories()
     }
@@ -287,9 +290,9 @@ class CustomFoodViewModel @Inject constructor(
         // Validate all fields
         val nameError = validateName(state.nameInput)
         val servingSizeError = validateServingSize(state.servingSizeInput)
-        val proteinError = validateMacro(state.proteinInput, "Protein")
-        val fatError = validateMacro(state.fatInput, "Fat")
-        val carbsError = validateMacro(state.carbsInput, "Carbs")
+        val proteinError = validateMacro(state.proteinInput, R.string.custom_food_macro_protein)
+        val fatError = validateMacro(state.fatInput, R.string.custom_food_macro_fat)
+        val carbsError = validateMacro(state.carbsInput, R.string.custom_food_macro_carbs)
 
         if (nameError != null || servingSizeError != null ||
             proteinError != null || fatError != null || carbsError != null
@@ -332,7 +335,7 @@ class CustomFoodViewModel @Inject constructor(
                         it.copy(isSaving = false, saveSuccess = true)
                     }
                     _listState.update {
-                        it.copy(snackbarMessage = "Food updated")
+                        it.copy(snackbarMessage = UiText.StringResource(R.string.custom_food_msg_updated))
                     }
                 } else {
                     // Create new food
@@ -348,12 +351,12 @@ class CustomFoodViewModel @Inject constructor(
                         it.copy(isSaving = false, saveSuccess = true)
                     }
                     _listState.update {
-                        it.copy(snackbarMessage = "Food created")
+                        it.copy(snackbarMessage = UiText.StringResource(R.string.custom_food_msg_created))
                     }
                 }
             } catch (e: Exception) {
                 _formState.update {
-                    it.copy(isSaving = false, error = "Failed to save food. Please try again.")
+                    it.copy(isSaving = false, error = UiText.StringResource(R.string.custom_food_error_save_failed))
                 }
             }
         }
@@ -386,22 +389,44 @@ class CustomFoodViewModel @Inject constructor(
         }
     }
 
-    private fun buildDeleteWarningMessage(intakeCount: Int, recipeCount: Int): String? {
-        val warnings = mutableListOf<String>()
-
-        if (intakeCount > 0) {
+    private fun buildDeleteWarningMessage(intakeCount: Int, recipeCount: Int): UiText? {
+        // Build positional count fragments (e.g. "2 log entries") so the full warning sentence
+        // is assembled from string resources without string concatenation in code.
+        val intakeFragment = if (intakeCount > 0) {
             // EC-016-002: Food is used in intake logs
-            warnings.add("This food is used in $intakeCount log ${if (intakeCount == 1) "entry" else "entries"}")
-        }
-        if (recipeCount > 0) {
-            // EC-016-003: Food is used in recipes
-            warnings.add("This food is used in $recipeCount ${if (recipeCount == 1) "recipe" else "recipes"}")
-        }
-
-        return if (warnings.isNotEmpty()) {
-            warnings.joinToString(". ") + ". Deleting it will affect these records."
+            UiText.StringResource(
+                if (intakeCount == 1) R.string.custom_food_delete_fragment_intake_one
+                else R.string.custom_food_delete_fragment_intake_other,
+                listOf(intakeCount)
+            )
         } else {
             null
+        }
+        val recipeFragment = if (recipeCount > 0) {
+            // EC-016-003: Food is used in recipes
+            UiText.StringResource(
+                if (recipeCount == 1) R.string.custom_food_delete_fragment_recipe_one
+                else R.string.custom_food_delete_fragment_recipe_other,
+                listOf(recipeCount)
+            )
+        } else {
+            null
+        }
+
+        return when {
+            intakeFragment != null && recipeFragment != null -> UiText.StringResource(
+                R.string.custom_food_delete_warning_both,
+                listOf(intakeFragment, recipeFragment)
+            )
+            intakeFragment != null -> UiText.StringResource(
+                R.string.custom_food_delete_warning_intake,
+                listOf(intakeFragment)
+            )
+            recipeFragment != null -> UiText.StringResource(
+                R.string.custom_food_delete_warning_recipe,
+                listOf(recipeFragment)
+            )
+            else -> null
         }
     }
 
@@ -428,7 +453,7 @@ class CustomFoodViewModel @Inject constructor(
                     it.copy(
                         deleteDialogFood = null,
                         deleteWarningMessage = null,
-                        snackbarMessage = "Food deleted"
+                        snackbarMessage = UiText.StringResource(R.string.custom_food_msg_deleted)
                     )
                 }
             } catch (e: Exception) {
@@ -436,7 +461,7 @@ class CustomFoodViewModel @Inject constructor(
                     it.copy(
                         deleteDialogFood = null,
                         deleteWarningMessage = null,
-                        error = "Failed to delete food. Please try again."
+                        error = UiText.StringResource(R.string.custom_food_error_delete_failed)
                     )
                 }
             }
@@ -464,34 +489,44 @@ class CustomFoodViewModel @Inject constructor(
     // Validation helpers
     // ============================
 
-    private fun validateName(name: String): String? {
+    private fun validateName(name: String): UiText? {
         // EC-013-001: Name is required
-        if (name.isBlank()) return "Food name is required"
+        if (name.isBlank()) return UiText.StringResource(R.string.custom_food_error_name_required)
         return null
     }
 
-    private fun validateServingSize(input: String): String? {
+    private fun validateServingSize(input: String): UiText? {
         // EC-013-001: Serving size is required
-        if (input.isBlank()) return "Serving size is required"
+        if (input.isBlank()) return UiText.StringResource(R.string.custom_food_error_serving_required)
 
         val value = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.custom_food_error_invalid_number)
 
         // EC-013-003: Must be greater than 0
-        if (value <= 0) return "Serving size must be greater than 0"
+        if (value <= 0) return UiText.StringResource(R.string.custom_food_error_serving_positive)
 
         return null
     }
 
-    private fun validateMacro(input: String, name: String): String? {
+    private fun validateMacro(input: String, @StringRes nameRes: Int): UiText? {
         // EC-013-001: Macros are required
-        if (input.isBlank()) return "$name is required"
+        if (input.isBlank()) {
+            return UiText.StringResource(
+                R.string.custom_food_error_macro_required,
+                listOf(UiText.StringResource(nameRes))
+            )
+        }
 
         val value = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.custom_food_error_invalid_number)
 
         // EC-013-002: Cannot be negative
-        if (value < 0) return "$name cannot be negative"
+        if (value < 0) {
+            return UiText.StringResource(
+                R.string.custom_food_error_macro_negative,
+                listOf(UiText.StringResource(nameRes))
+            )
+        }
 
         return null
     }

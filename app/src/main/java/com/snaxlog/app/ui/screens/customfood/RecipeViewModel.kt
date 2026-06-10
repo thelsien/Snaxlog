@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.data.local.entity.ServingUnit
+import com.snaxlog.app.R
 import com.snaxlog.app.data.repository.FoodRepository
 import com.snaxlog.app.data.repository.RecipeIngredientInput
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.ui.components.IngredientItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,14 +29,14 @@ data class RecipeFormUiState(
 
     // Form inputs
     val nameInput: String = "",
-    val nameError: String? = null,
+    val nameError: UiText? = null,
 
     val numberOfServingsInput: String = "1",
-    val numberOfServingsError: String? = null,
+    val numberOfServingsError: UiText? = null,
 
     // Ingredients
     val ingredients: List<IngredientItem> = emptyList(),
-    val ingredientsError: String? = null,
+    val ingredientsError: UiText? = null,
 
     // Ingredient picker state
     val showIngredientPicker: Boolean = false,
@@ -56,7 +58,7 @@ data class RecipeFormUiState(
     // State
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
     val duplicateNameWarning: Boolean = false,
     val saveSuccess: Boolean = false
 )
@@ -112,7 +114,7 @@ class RecipeViewModel @Inject constructor(
                     // Verify it's actually a recipe
                     if (recipe.foodType != FoodType.RECIPE) {
                         _formState.update {
-                            it.copy(isLoading = false, error = "This is not a recipe")
+                            it.copy(isLoading = false, error = UiText.StringResource(R.string.recipe_error_not_recipe))
                         }
                         return@launch
                     }
@@ -162,12 +164,12 @@ class RecipeViewModel @Inject constructor(
                     recalculateNutrition()
                 } else {
                     _formState.update {
-                        it.copy(isLoading = false, error = "Recipe not found")
+                        it.copy(isLoading = false, error = UiText.StringResource(R.string.recipe_error_not_found))
                     }
                 }
             } catch (e: Exception) {
                 _formState.update {
-                    it.copy(isLoading = false, error = "Failed to load recipe")
+                    it.copy(isLoading = false, error = UiText.StringResource(R.string.recipe_error_load_failed))
                 }
             }
         }
@@ -277,7 +279,7 @@ class RecipeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _formState.update {
-                    it.copy(isLoadingFoods = false, error = "Failed to load foods")
+                    it.copy(isLoadingFoods = false, error = UiText.StringResource(R.string.recipe_error_load_foods_failed))
                 }
             }
         }
@@ -333,7 +335,7 @@ class RecipeViewModel @Inject constructor(
         val quantity = _formState.value.ingredientQuantityInput.toDoubleOrNull()
 
         if (quantity == null || quantity <= 0) {
-            _formState.update { it.copy(error = "Please enter a valid quantity") }
+            _formState.update { it.copy(error = UiText.StringResource(R.string.recipe_error_invalid_quantity)) }
             return
         }
 
@@ -515,7 +517,7 @@ class RecipeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _formState.update {
-                    it.copy(isSaving = false, error = "Failed to save recipe. Please try again.")
+                    it.copy(isSaving = false, error = UiText.StringResource(R.string.recipe_error_save_failed))
                 }
             }
         }
@@ -537,25 +539,25 @@ class RecipeViewModel @Inject constructor(
     // Validation helpers
     // ============================
 
-    private fun validateName(name: String): String? {
-        if (name.isBlank()) return "Recipe name is required"
+    private fun validateName(name: String): UiText? {
+        if (name.isBlank()) return UiText.StringResource(R.string.recipe_error_name_required)
         return null
     }
 
-    private fun validateNumberOfServings(input: String): String? {
-        if (input.isBlank()) return "Number of servings is required"
+    private fun validateNumberOfServings(input: String): UiText? {
+        if (input.isBlank()) return UiText.StringResource(R.string.recipe_error_servings_required)
 
         val value = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.recipe_error_invalid_number)
 
-        if (value <= 0) return "Must be greater than 0"
+        if (value <= 0) return UiText.StringResource(R.string.recipe_error_servings_positive)
 
         return null
     }
 
-    private fun validateIngredients(ingredients: List<IngredientItem>): String? {
+    private fun validateIngredients(ingredients: List<IngredientItem>): UiText? {
         // EC-014-003: Minimum 1 ingredient required
-        if (ingredients.isEmpty()) return "Add at least one ingredient"
+        if (ingredients.isEmpty()) return UiText.StringResource(R.string.recipe_error_min_ingredient)
         return null
     }
 

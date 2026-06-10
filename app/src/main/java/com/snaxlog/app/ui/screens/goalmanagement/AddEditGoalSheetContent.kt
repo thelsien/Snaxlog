@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.ui.components.GoalFormField
 import com.snaxlog.app.ui.theme.Spacing
 
@@ -72,7 +73,7 @@ fun AddEditGoalSheetContent(
             formState.error != null && formState.isEditMode && formState.editingGoalId == null -> {
                 // Fatal error (goal doesn't exist)
                 Text(
-                    text = formState.error ?: stringResource(R.string.common_unknown_error),
+                    text = formState.error?.asString() ?: stringResource(R.string.common_unknown_error),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -89,7 +90,7 @@ fun AddEditGoalSheetContent(
                     onValueChange = { viewModel.updateGoalName(it) },
                     label = stringResource(R.string.goal_form_name_label),
                     placeholder = stringResource(R.string.goal_form_name_placeholder),
-                    errorMessage = formState.nameError,
+                    errorMessage = formState.nameError?.asString(),
                     keyboardType = KeyboardType.Text
                 )
 
@@ -101,7 +102,7 @@ fun AddEditGoalSheetContent(
                     onValueChange = { viewModel.updateCalorieTarget(it) },
                     label = stringResource(R.string.goal_form_calorie_label),
                     placeholder = stringResource(R.string.goal_form_calorie_placeholder),
-                    errorMessage = formState.calorieError,
+                    errorMessage = formState.calorieError?.asString(),
                     keyboardType = KeyboardType.Number
                 )
 
@@ -122,7 +123,7 @@ fun AddEditGoalSheetContent(
                     onValueChange = { viewModel.updateProteinTarget(it) },
                     label = stringResource(R.string.goal_form_protein_label),
                     placeholder = stringResource(R.string.goal_form_protein_placeholder),
-                    errorMessage = formState.proteinError,
+                    errorMessage = formState.proteinError?.asString(),
                     keyboardType = KeyboardType.Decimal
                 )
 
@@ -134,7 +135,7 @@ fun AddEditGoalSheetContent(
                     onValueChange = { viewModel.updateFatTarget(it) },
                     label = stringResource(R.string.goal_form_fat_label),
                     placeholder = stringResource(R.string.goal_form_fat_placeholder),
-                    errorMessage = formState.fatError,
+                    errorMessage = formState.fatError?.asString(),
                     keyboardType = KeyboardType.Decimal
                 )
 
@@ -146,7 +147,7 @@ fun AddEditGoalSheetContent(
                     onValueChange = { viewModel.updateCarbsTarget(it) },
                     label = stringResource(R.string.goal_form_carbs_label),
                     placeholder = stringResource(R.string.goal_form_carbs_placeholder),
-                    errorMessage = formState.carbsError,
+                    errorMessage = formState.carbsError?.asString(),
                     keyboardType = KeyboardType.Decimal
                 )
 

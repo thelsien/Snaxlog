@@ -1,6 +1,8 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
 import androidx.lifecycle.SavedStateHandle
+import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
@@ -233,6 +235,9 @@ class DeleteEntryTest {
         viewModel.confirmDeleteEntry()
         advanceUntilIdle()
 
-        assertEquals("Entry deleted", viewModel.uiState.value.snackbarMessage)
+        assertEquals(
+            UiText.StringResource(R.string.daily_log_msg_entry_deleted),
+            viewModel.uiState.value.snackbarMessage
+        )
     }
 }
