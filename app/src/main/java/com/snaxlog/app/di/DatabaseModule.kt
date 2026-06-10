@@ -7,7 +7,9 @@ import com.snaxlog.app.data.local.dao.FoodDao
 import com.snaxlog.app.data.local.dao.FoodIntakeEntryDao
 import com.snaxlog.app.data.local.dao.RecipeIngredientDao
 import com.snaxlog.app.data.local.database.Migrations
+import com.snaxlog.app.data.local.database.RoomTransactionRunner
 import com.snaxlog.app.data.local.database.SnaxlogDatabase
+import com.snaxlog.app.data.local.database.TransactionRunner
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,4 +55,9 @@ object DatabaseModule {
     @Provides
     fun provideRecipeIngredientDao(database: SnaxlogDatabase): RecipeIngredientDao =
         database.recipeIngredientDao()
+
+    @Provides
+    @Singleton
+    fun provideTransactionRunner(database: SnaxlogDatabase): TransactionRunner =
+        RoomTransactionRunner(database)
 }

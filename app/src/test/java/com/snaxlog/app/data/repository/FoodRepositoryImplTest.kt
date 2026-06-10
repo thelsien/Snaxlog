@@ -2,6 +2,7 @@ package com.snaxlog.app.data.repository
 
 import com.snaxlog.app.data.local.dao.FoodDao
 import com.snaxlog.app.data.local.dao.RecipeIngredientDao
+import com.snaxlog.app.data.local.database.TransactionRunner
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.data.local.entity.RecipeIngredientEntity
@@ -23,8 +24,30 @@ import org.junit.Test
 
 class FoodRepositoryImplTest {
 
+    /**
+     * Pass-through [TransactionRunner] that tracks whether a transaction
+     * is active so tests can assert writes happen inside one.
+     */
+    private class FakeTransactionRunner : TransactionRunner {
+        var inTransaction = false
+            private set
+        var transactionCount = 0
+            private set
+
+        override suspend fun <T> invoke(block: suspend () -> T): T {
+            transactionCount++
+            inTransaction = true
+            try {
+                return block()
+            } finally {
+                inTransaction = false
+            }
+        }
+    }
+
     private lateinit var foodDao: FoodDao
     private lateinit var recipeIngredientDao: RecipeIngredientDao
+    private lateinit var transactionRunner: FakeTransactionRunner
     private lateinit var repository: FoodRepositoryImpl
 
     private val testFoods = listOf(
@@ -52,7 +75,8 @@ class FoodRepositoryImplTest {
     fun setup() {
         foodDao = mockk(relaxed = true)
         recipeIngredientDao = mockk(relaxed = true)
-        repository = FoodRepositoryImpl(foodDao, recipeIngredientDao)
+        transactionRunner = FakeTransactionRunner()
+        repository = FoodRepositoryImpl(foodDao, recipeIngredientDao, transactionRunner)
     }
 
     // ============================================================
@@ -625,5 +649,80 @@ class FoodRepositoryImplTest {
         val result = repository.getIntakeUsageCount(1L)
 
         assertEquals(5, result)
+    }
+
+    // ============================================================
+    // EC-014-012: Transaction atomicity
+    // ============================================================
+
+    @Test
+    fun `createRecipe inserts recipe and ingredients inside a single transaction`() = runTest {
+        var recipeInsertedInTransaction = false
+        var ingredientsInsertedInTransaction = false
+
+        coEvery { foodDao.getFoodsByIds(listOf(1L)) } returns listOf(testFoods[0])
+        coEvery { foodDao.insert(any()) } coAnswers {
+            recipeInsertedInTransaction = transactionRunner.inTransaction
+            200L
+        }
+        coEvery { recipeIngredientDao.insertAll(any()) } coAnswers {
+            ingredientsInsertedInTransaction = transactionRunner.inTransaction
+            listOf(1L)
+        }
+
+        repository.createRecipe(
+            name = "Atomic Recipe",
+            numberOfServings = 1.0,
+            ingredients = listOf(
+                RecipeIngredientInput(foodId = 1L, quantity = 1.0, unit = ServingUnit.SERVING)
+            )
+        )
+
+        assertEquals(1, transactionRunner.transactionCount)
+        assertTrue(recipeInsertedInTransaction)
+        assertTrue(ingredientsInsertedInTransaction)
+    }
+
+    @Test
+    fun `updateRecipe replaces recipe and ingredients inside a single transaction`() = runTest {
+        val existingRecipe = FoodEntity(
+            id = 200, name = "Old Recipe", category = "Recipe",
+            servingSize = "1 serving", servingWeightGrams = 0.0,
+            caloriesPerServing = 100, proteinPerServing = 10.0,
+            fatPerServing = 5.0, carbsPerServing = 10.0,
+            isUserCreated = true, foodType = FoodType.RECIPE,
+            servingUnit = ServingUnit.SERVING, servingSizeValue = 1.0,
+            numberOfServings = 2.0
+        )
+        var updatedInTransaction = false
+        var deletedInTransaction = false
+        var insertedInTransaction = false
+
+        coEvery { foodDao.getFoodById(200L) } returns existingRecipe
+        coEvery { foodDao.getFoodsByIds(listOf(1L)) } returns listOf(testFoods[0])
+        coEvery { foodDao.update(any()) } coAnswers {
+            updatedInTransaction = transactionRunner.inTransaction
+        }
+        coEvery { recipeIngredientDao.deleteAllForRecipe(200L) } coAnswers {
+            deletedInTransaction = transactionRunner.inTransaction
+        }
+        coEvery { recipeIngredientDao.insertAll(any()) } coAnswers {
+            insertedInTransaction = transactionRunner.inTransaction
+            listOf(1L)
+        }
+
+        repository.updateRecipe(
+            recipeId = 200L,
+            name = "New Recipe",
+            numberOfServings = 4.0,
+            ingredients = listOf(
+                RecipeIngredientInput(foodId = 1L, quantity = 2.0, unit = ServingUnit.SERVING)
+            )
+        )
+
+        assertEquals(1, transactionRunner.transactionCount)
+        assertTrue(updatedInTransaction)
+        assertTrue(deletedInTransaction)
+        assertTrue(insertedInTransaction)
     }
 }

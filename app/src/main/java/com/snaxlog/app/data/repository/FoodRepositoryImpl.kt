@@ -2,6 +2,7 @@ package com.snaxlog.app.data.repository
 
 import com.snaxlog.app.data.local.dao.FoodDao
 import com.snaxlog.app.data.local.dao.RecipeIngredientDao
+import com.snaxlog.app.data.local.database.TransactionRunner
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.data.local.entity.RecipeIngredientEntity
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class FoodRepositoryImpl @Inject constructor(
     private val foodDao: FoodDao,
-    private val recipeIngredientDao: RecipeIngredientDao
+    private val recipeIngredientDao: RecipeIngredientDao,
+    private val transactionRunner: TransactionRunner
 ) : FoodRepository {
 
     // ============================
@@ -124,20 +126,21 @@ class FoodRepositoryImpl @Inject constructor(
             updatedAt = now
         )
 
-        // Insert recipe
-        val recipeId = foodDao.insert(recipe)
-
-        // Insert ingredients
-        val ingredientEntities = ingredients.mapIndexed { index, input ->
-            RecipeIngredientEntity(
-                recipeId = recipeId,
-                ingredientFoodId = input.foodId,
-                quantity = input.quantity,
-                unit = input.unit,
-                sortOrder = index
-            )
+        // Insert recipe and its ingredients atomically
+        val recipeId = transactionRunner {
+            val recipeId = foodDao.insert(recipe)
+            val ingredientEntities = ingredients.mapIndexed { index, input ->
+                RecipeIngredientEntity(
+                    recipeId = recipeId,
+                    ingredientFoodId = input.foodId,
+                    quantity = input.quantity,
+                    unit = input.unit,
+                    sortOrder = index
+                )
+            }
+            recipeIngredientDao.insertAll(ingredientEntities)
+            recipeId
         }
-        recipeIngredientDao.insertAll(ingredientEntities)
 
         return recipe.copy(id = recipeId)
     }
@@ -218,21 +221,21 @@ class FoodRepositoryImpl @Inject constructor(
             updatedAt = now
         )
 
-        // Update recipe
-        foodDao.update(updated)
-
-        // Replace ingredients (delete old, insert new)
-        recipeIngredientDao.deleteAllForRecipe(recipeId)
-        val ingredientEntities = ingredients.mapIndexed { index, input ->
-            RecipeIngredientEntity(
-                recipeId = recipeId,
-                ingredientFoodId = input.foodId,
-                quantity = input.quantity,
-                unit = input.unit,
-                sortOrder = index
-            )
+        // Update recipe and replace ingredients (delete old, insert new) atomically
+        transactionRunner {
+            foodDao.update(updated)
+            recipeIngredientDao.deleteAllForRecipe(recipeId)
+            val ingredientEntities = ingredients.mapIndexed { index, input ->
+                RecipeIngredientEntity(
+                    recipeId = recipeId,
+                    ingredientFoodId = input.foodId,
+                    quantity = input.quantity,
+                    unit = input.unit,
+                    sortOrder = index
+                )
+            }
+            recipeIngredientDao.insertAll(ingredientEntities)
         }
-        recipeIngredientDao.insertAll(ingredientEntities)
 
         return updated
     }
