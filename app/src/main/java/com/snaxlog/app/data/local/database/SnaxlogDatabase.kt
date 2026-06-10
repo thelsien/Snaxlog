@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
         RecipeIngredientEntity::class  // EPIC-006: Recipe ingredients
     ],
     version = 4,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class SnaxlogDatabase : RoomDatabase() {
