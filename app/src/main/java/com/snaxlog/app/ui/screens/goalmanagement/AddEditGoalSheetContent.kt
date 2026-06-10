@@ -20,8 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.components.GoalFormField
 import com.snaxlog.app.ui.theme.Spacing
 
@@ -44,7 +46,11 @@ fun AddEditGoalSheetContent(
     ) {
         // Title
         Text(
-            text = if (formState.isEditMode) "Edit Goal" else "Add Custom Goal",
+            text = if (formState.isEditMode) {
+                stringResource(R.string.goal_form_title_edit)
+            } else {
+                stringResource(R.string.goal_form_title_add)
+            },
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -66,13 +72,13 @@ fun AddEditGoalSheetContent(
             formState.error != null && formState.isEditMode && formState.editingGoalId == null -> {
                 // Fatal error (goal doesn't exist)
                 Text(
-                    text = formState.error ?: "Unknown error",
+                    text = formState.error ?: stringResource(R.string.common_unknown_error),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )
                 Spacer(modifier = Modifier.height(Spacing.base))
                 TextButton(onClick = onDismiss) {
-                    Text("Close")
+                    Text(stringResource(R.string.goal_form_close))
                 }
             }
 
@@ -81,8 +87,8 @@ fun AddEditGoalSheetContent(
                 GoalFormField(
                     value = formState.nameInput,
                     onValueChange = { viewModel.updateGoalName(it) },
-                    label = "Goal Name",
-                    placeholder = "e.g., My Custom Goal",
+                    label = stringResource(R.string.goal_form_name_label),
+                    placeholder = stringResource(R.string.goal_form_name_placeholder),
                     errorMessage = formState.nameError,
                     keyboardType = KeyboardType.Text
                 )
@@ -93,8 +99,8 @@ fun AddEditGoalSheetContent(
                 GoalFormField(
                     value = formState.calorieInput,
                     onValueChange = { viewModel.updateCalorieTarget(it) },
-                    label = "Calorie Target",
-                    placeholder = "e.g., 2000",
+                    label = stringResource(R.string.goal_form_calorie_label),
+                    placeholder = stringResource(R.string.goal_form_calorie_placeholder),
                     errorMessage = formState.calorieError,
                     keyboardType = KeyboardType.Number
                 )
@@ -103,7 +109,7 @@ fun AddEditGoalSheetContent(
 
                 // Optional macro targets section
                 Text(
-                    text = "Macro Targets (optional)",
+                    text = stringResource(R.string.goal_form_macro_section),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -114,8 +120,8 @@ fun AddEditGoalSheetContent(
                 GoalFormField(
                     value = formState.proteinInput,
                     onValueChange = { viewModel.updateProteinTarget(it) },
-                    label = "Protein (g)",
-                    placeholder = "e.g., 150",
+                    label = stringResource(R.string.goal_form_protein_label),
+                    placeholder = stringResource(R.string.goal_form_protein_placeholder),
                     errorMessage = formState.proteinError,
                     keyboardType = KeyboardType.Decimal
                 )
@@ -126,8 +132,8 @@ fun AddEditGoalSheetContent(
                 GoalFormField(
                     value = formState.fatInput,
                     onValueChange = { viewModel.updateFatTarget(it) },
-                    label = "Fat (g)",
-                    placeholder = "e.g., 67",
+                    label = stringResource(R.string.goal_form_fat_label),
+                    placeholder = stringResource(R.string.goal_form_fat_placeholder),
                     errorMessage = formState.fatError,
                     keyboardType = KeyboardType.Decimal
                 )
@@ -138,8 +144,8 @@ fun AddEditGoalSheetContent(
                 GoalFormField(
                     value = formState.carbsInput,
                     onValueChange = { viewModel.updateCarbsTarget(it) },
-                    label = "Carbs (g)",
-                    placeholder = "e.g., 200",
+                    label = stringResource(R.string.goal_form_carbs_label),
+                    placeholder = stringResource(R.string.goal_form_carbs_placeholder),
                     errorMessage = formState.carbsError,
                     keyboardType = KeyboardType.Decimal
                 )
@@ -156,7 +162,7 @@ fun AddEditGoalSheetContent(
                         onClick = onDismiss,
                         enabled = !formState.isSaving
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.goal_form_cancel))
                     }
 
                     Spacer(modifier = Modifier.width(Spacing.sm))
@@ -173,7 +179,13 @@ fun AddEditGoalSheetContent(
                                 strokeWidth = Spacing.xxs
                             )
                         } else {
-                            Text(if (formState.isEditMode) "Update" else "Save")
+                            Text(
+                                if (formState.isEditMode) {
+                                    stringResource(R.string.goal_form_update)
+                                } else {
+                                    stringResource(R.string.goal_form_save)
+                                }
+                            )
                         }
                     }
                 }

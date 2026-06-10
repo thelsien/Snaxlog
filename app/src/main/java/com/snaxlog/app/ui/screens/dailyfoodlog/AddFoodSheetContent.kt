@@ -32,9 +32,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import com.snaxlog.app.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -88,7 +90,7 @@ fun AddFoodSheetContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Adding entry to: $formattedDate",
+                        text = stringResource(R.string.add_food_historical_prefix, formattedDate),
                         style = MaterialTheme.typography.bodySmall,
                         color = customColors.historicalDate
                     )
@@ -97,7 +99,7 @@ fun AddFoodSheetContent(
             }
 
             Text(
-                text = "Add Food Entry",
+                text = stringResource(R.string.add_food_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -105,20 +107,21 @@ fun AddFoodSheetContent(
             Spacer(modifier = Modifier.height(Spacing.base))
 
             // C-007: Search field
+            val searchDescription = stringResource(R.string.add_food_search_description)
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = { viewModel.updateSearchQuery(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "Search foods" },
-                placeholder = { Text("Search foods...") },
+                    .semantics { contentDescription = searchDescription },
+                placeholder = { Text(stringResource(R.string.add_food_search_placeholder)) },
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null)
                 },
                 trailingIcon = {
                     if (state.searchQuery.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearSearch() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.add_food_clear_search))
                         }
                     }
                 },
@@ -136,8 +139,8 @@ fun AddFoodSheetContent(
                 )
             } else if (state.foods.isEmpty()) {
                 EmptyStateView(
-                    title = "No foods found",
-                    message = "Try different search terms or browse all foods"
+                    title = stringResource(R.string.add_food_no_foods_title),
+                    message = stringResource(R.string.add_food_no_foods_message)
                 )
             } else {
                 // AC-048: Group foods by category for organized browsing.
@@ -201,7 +204,7 @@ fun AddFoodSheetContent(
                 onClick = onDismiss,
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.add_food_cancel))
             }
 
         } else {
@@ -212,7 +215,7 @@ fun AddFoodSheetContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { viewModel.clearFoodSelection() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to food list")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.add_food_back))
                 }
                 Text(
                     text = food.name,
@@ -225,14 +228,14 @@ fun AddFoodSheetContent(
 
             // AC-049: Show serving size
             Text(
-                text = "Serving: ${food.servingSize}",
+                text = stringResource(R.string.add_food_serving, food.servingSize),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // AC-050: Show complete nutritional info (category displayed for context)
             Text(
-                text = "Category: ${food.category}",
+                text = stringResource(R.string.add_food_category, food.category),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -240,13 +243,14 @@ fun AddFoodSheetContent(
             Spacer(modifier = Modifier.height(Spacing.base))
 
             // C-009: ServingSizeInput
+            val servingsDescription = stringResource(R.string.add_food_servings_description)
             OutlinedTextField(
                 value = state.servingsInput,
                 onValueChange = { viewModel.updateAddFoodServings(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "Number of servings" },
-                label = { Text("Number of servings") },
+                    .semantics { contentDescription = servingsDescription },
+                label = { Text(stringResource(R.string.add_food_servings_label)) },
                 isError = state.servingsError != null,
                 supportingText = state.servingsError?.let { error ->
                     { Text(error, color = MaterialTheme.colorScheme.error) }
@@ -270,7 +274,7 @@ fun AddFoodSheetContent(
             if (state.isAddingToHistorical) {
                 Spacer(modifier = Modifier.height(Spacing.xs))
                 Text(
-                    text = "Tip: Select the meal category manually for historical entries",
+                    text = stringResource(R.string.add_food_historical_tip),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -294,7 +298,7 @@ fun AddFoodSheetContent(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.add_food_cancel))
                 }
                 Spacer(modifier = Modifier.width(Spacing.sm))
                 Button(
@@ -308,7 +312,7 @@ fun AddFoodSheetContent(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Add Entry")
+                        Text(stringResource(R.string.add_food_add_entry))
                     }
                 }
             }
@@ -359,6 +363,12 @@ private fun FoodItemRow(
     numberFormat: NumberFormat,
     onClick: () -> Unit
 ) {
+    val itemDescription = stringResource(
+        R.string.add_food_item_description,
+        food.name,
+        food.servingSize,
+        food.caloriesPerServing
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -368,7 +378,7 @@ private fun FoodItemRow(
                 vertical = Spacing.listItemPaddingVertical
             )
             .semantics {
-                contentDescription = "${food.name}, ${food.servingSize}, ${food.caloriesPerServing} calories per serving. Tap to select."
+                contentDescription = itemDescription
             },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -408,7 +418,7 @@ private fun FoodItemRow(
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(
-                text = " cal",
+                text = stringResource(R.string.add_food_item_cal_suffix),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

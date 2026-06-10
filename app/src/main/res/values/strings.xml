@@ -1,3 +1,390 @@
 <resources>
     <string name="app_name">Snaxlog</string>
+
+    <!-- ============================================================ -->
+    <!-- Common / Shared                                              -->
+    <!-- ============================================================ -->
+    <string name="common_cancel">Cancel</string>
+    <string name="common_close">Close</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_select">Select</string>
+    <string name="common_navigate_back">Navigate back</string>
+    <string name="common_go_back">Go back</string>
+    <string name="common_unknown_error">Unknown error</string>
+
+    <!-- ============================================================ -->
+    <!-- C-029 CalorieCalculator                                      -->
+    <!-- ============================================================ -->
+    <string name="calorie_calculator_label">Calculated Calories</string>
+    <string name="calorie_calculator_cal_unit"> cal</string>
+    <string name="calorie_calculator_description">%1$d calories calculated from %2$sg protein, %3$sg fat, %4$sg carbs</string>
+    <string name="calorie_calculator_formula">(%1$sg protein x 4 = %2$d) + (%3$sg carbs x 4 = %4$d) + (%5$sg fat x 9 = %6$d)</string>
+
+    <!-- ============================================================ -->
+    <!-- C-021 CategoryBadge                                          -->
+    <!-- ============================================================ -->
+    <string name="category_badge_description">%1$s category</string>
+
+    <!-- Meal category labels (shared by several components) -->
+    <string name="meal_category_breakfast">Breakfast</string>
+    <string name="meal_category_lunch">Lunch</string>
+    <string name="meal_category_dinner">Dinner</string>
+    <string name="meal_category_snacking">Snacking</string>
+    <string name="meal_category_uncategorized">Uncategorized</string>
+    <string name="meal_category_none">None</string>
+
+    <!-- ============================================================ -->
+    <!-- C-003 DailySummaryCard                                       -->
+    <!-- ============================================================ -->
+    <string name="daily_summary_default_title">Today\'s Summary</string>
+    <string name="daily_summary_goals">Goals</string>
+    <string name="daily_summary_set_goal">Set Goal</string>
+    <string name="daily_summary_calories">calories</string>
+    <string name="daily_summary_calories_with_goal">%1$s / %2$s</string>
+    <string name="daily_summary_no_goal_prompt">Tap to set a goal for tracking</string>
+    <string name="daily_summary_goal_reached">Goal reached!</string>
+    <string name="daily_summary_over_goal">Over goal by %1$s</string>
+    <string name="daily_summary_remaining_approaching">%1$s remaining - approaching limit</string>
+    <string name="daily_summary_remaining">%1$s remaining</string>
+    <string name="daily_summary_acc_over_goal">Over goal.</string>
+    <string name="daily_summary_acc_approaching">Approaching goal limit.</string>
+    <string name="daily_summary_acc_remaining">%1$s remaining</string>
+    <string name="daily_summary_acc_over_by">Over by %1$s</string>
+    <string name="daily_summary_acc_with_goal">Daily summary. %1$s of %2$s calories consumed. %3$d percent of goal. %4$s %5$s. Protein: %6$sg, Fat: %7$sg, Carbs: %8$sg. Tap to manage goals.</string>
+    <string name="daily_summary_acc_no_goal">Daily summary. %1$s calories consumed. No goal set. Tap to set a goal.</string>
+
+    <!-- ============================================================ -->
+    <!-- C-023 DateNavigationBar                                      -->
+    <!-- ============================================================ -->
+    <string name="date_nav_today">Today</string>
+    <string name="date_nav_today_prefix">Today, %1$s</string>
+    <string name="date_nav_previous_day">Previous day, %1$s</string>
+    <string name="date_nav_next_day">Next day, %1$s</string>
+    <string name="date_nav_cannot_navigate_forward">Cannot navigate forward, already viewing today</string>
+    <string name="date_nav_open_calendar">Open calendar picker. Currently viewing %1$s</string>
+    <string name="date_nav_bar_description">Date navigation. Currently viewing %1$s. Tap date to open calendar, use arrows to navigate.</string>
+    <string name="date_nav_return_to_today">Return to today</string>
+
+    <!-- ============================================================ -->
+    <!-- C-024 SnaxlogDatePickerDialog                                -->
+    <!-- ============================================================ -->
+    <string name="date_picker_select">Select</string>
+    <string name="date_picker_cancel">Cancel</string>
+    <string name="date_picker_dialog_description">Select a date. Future dates are not available.</string>
+    <string name="date_picker_title">Select date</string>
+    <string name="date_picker_title_description">Select a date dialog. Currently selected: %1$s</string>
+
+    <!-- ============================================================ -->
+    <!-- C-013 DeleteConfirmationDialog                               -->
+    <!-- ============================================================ -->
+    <string name="delete_dialog_description">Confirmation dialog. %1$s. %2$s</string>
+    <string name="delete_dialog_cancel">Cancel</string>
+    <string name="delete_dialog_delete">Delete</string>
+
+    <!-- ============================================================ -->
+    <!-- C-006 EmptyStateView                                         -->
+    <!-- ============================================================ -->
+    <string name="empty_state_description">%1$s. %2$s</string>
+
+    <!-- ============================================================ -->
+    <!-- C-002 FoodEntryCard                                          -->
+    <!-- ============================================================ -->
+    <string name="food_entry_description">%1$s, %2$s, %3$s calories, logged at %4$s. Tap to edit, swipe to delete.</string>
+    <string name="food_entry_delete">Delete entry</string>
+    <string name="food_entry_cal_suffix"> cal</string>
+
+    <!-- ============================================================ -->
+    <!-- C-027 FoodTypeBadge                                          -->
+    <!-- ============================================================ -->
+    <string name="food_type_custom">Custom</string>
+    <string name="food_type_recipe">Recipe</string>
+    <string name="food_type_badge_description">%1$s food</string>
+
+    <!-- ============================================================ -->
+    <!-- C-012 GoalCard                                               -->
+    <!-- ============================================================ -->
+    <string name="goal_card_predefined">Pre-defined</string>
+    <string name="goal_card_custom">Custom</string>
+    <string name="goal_card_active">Active goal.</string>
+    <string name="goal_card_description">%1$s, %2$s calories. %3$s. %4$s %5$s Tap to select.</string>
+    <string name="goal_card_cal_suffix"> cal</string>
+    <string name="goal_card_delete">Delete goal</string>
+    <string name="goal_card_edit">Edit goal</string>
+    <string name="goal_card_active_indicator">Active goal</string>
+    <string name="goal_card_macro_protein">P: %1$sg</string>
+    <string name="goal_card_macro_fat">F: %1$sg</string>
+    <string name="goal_card_macro_carbs">C: %1$sg</string>
+    <string name="goal_card_macro_desc_protein">Protein: %1$sg</string>
+    <string name="goal_card_macro_desc_fat">Fat: %1$sg</string>
+    <string name="goal_card_macro_desc_carbs">Carbs: %1$sg</string>
+
+    <!-- ============================================================ -->
+    <!-- C-017 GoalFormField                                          -->
+    <!-- ============================================================ -->
+    <string name="goal_form_field_description_error">%1$s field. Error: %2$s</string>
+    <string name="goal_form_field_description">%1$s field</string>
+
+    <!-- ============================================================ -->
+    <!-- C-025 HistoricalDateBanner                                   -->
+    <!-- ============================================================ -->
+    <string name="historical_banner_description">Viewing historical date: %1$s. Tap \'Return to Today\' to go back to current day.</string>
+    <string name="historical_banner_viewing">Viewing %1$s</string>
+    <string name="historical_banner_return">Return to Today</string>
+    <string name="historical_banner_return_to_today">Return to today</string>
+
+    <!-- ============================================================ -->
+    <!-- C-031 IngredientListItem                                     -->
+    <!-- ============================================================ -->
+    <string name="ingredient_item_description">Ingredient %1$d: %2$s, %3$s %4$s</string>
+    <string name="ingredient_item_drag">Drag to reorder</string>
+    <string name="ingredient_item_quantity_serving">%1$s × %2$s</string>
+    <string name="ingredient_item_amount_unit">%1$s %2$s</string>
+    <string name="ingredient_item_cal_suffix"> cal</string>
+    <string name="ingredient_item_remove">Remove %1$s</string>
+    <string name="ingredient_item_compact_description">%1$s, %2$s %3$s, %4$d calories</string>
+    <string name="ingredient_item_compact_index">%1$d.</string>
+    <string name="ingredient_item_compact_serving">(%1$s)</string>
+    <string name="ingredient_item_compact_quantity_serving">(%1$s × %2$s)</string>
+    <string name="ingredient_item_compact_amount_unit">(%1$s %2$s)</string>
+    <string name="ingredient_item_compact_cal">%1$s cal</string>
+
+    <!-- ============================================================ -->
+    <!-- C-005 MacroIndicator                                         -->
+    <!-- ============================================================ -->
+    <string name="macro_protein">Protein</string>
+    <string name="macro_fat">Fat</string>
+    <string name="macro_carbs">Carbs</string>
+    <string name="macro_value_with_goal">%1$sg / %2$sg</string>
+    <string name="macro_value">%1$sg</string>
+    <string name="macro_description_with_goal">%1$s: %2$s (%3$d%% of goal)</string>
+    <string name="macro_description">%1$s: %2$s</string>
+
+    <!-- ============================================================ -->
+    <!-- C-020 MealCategoryHeader                                     -->
+    <!-- ============================================================ -->
+    <string name="meal_header_count">(%1$d item%2$s)</string>
+    <string name="meal_header_nutrition">%1$d cal | P: %2$dg F: %3$dg C: %4$dg</string>
+    <string name="meal_header_description">%1$s category, %2$d %3$s, %4$d calories, protein %5$d grams, fat %6$d grams, carbs %7$d grams</string>
+    <string name="meal_header_item">item</string>
+    <string name="meal_header_items">items</string>
+    <string name="meal_header_collapsed">Collapsed</string>
+    <string name="meal_header_expanded">Expanded</string>
+
+    <!-- ============================================================ -->
+    <!-- C-019 MealCategorySelector                                   -->
+    <!-- ============================================================ -->
+    <string name="meal_selector_label">Meal Category (Optional)</string>
+    <string name="meal_selector_chip_selected">selected</string>
+    <string name="meal_selector_chip_unselected">unselected</string>
+    <string name="meal_selector_chip_description">%1$s category chip, %2$s</string>
+
+    <!-- ============================================================ -->
+    <!-- C-028 MacroInputField                                        -->
+    <!-- ============================================================ -->
+    <string name="macro_input_suffix">g</string>
+    <string name="macro_input_description_error">%1$s field. Error: %2$s</string>
+    <string name="macro_input_description">%1$s field. Enter grams.</string>
+
+    <!-- ============================================================ -->
+    <!-- C-016 NutritionPreview                                       -->
+    <!-- ============================================================ -->
+    <string name="nutrition_preview_title">Nutrition Preview</string>
+    <string name="nutrition_preview_calories">%1$s calories</string>
+    <string name="nutrition_preview_description">Nutrition preview. %1$s calories. Protein: %2$sg, Fat: %3$sg, Carbs: %4$sg</string>
+
+    <!-- ============================================================ -->
+    <!-- C-004 ProgressBar                                            -->
+    <!-- ============================================================ -->
+    <string name="progress_bar_description">%1$d%% of goal</string>
+
+    <!-- ============================================================ -->
+    <!-- C-032 RecipeNutritionSummary                                 -->
+    <!-- ============================================================ -->
+    <string name="recipe_nutrition_description">Recipe nutrition: %1$d total calories, %2$d per serving. %3$d ingredients making %4$s servings.</string>
+    <string name="recipe_nutrition_title">Recipe Nutrition</string>
+    <string name="recipe_nutrition_ingredient_count">%1$d %2$s</string>
+    <string name="recipe_nutrition_ingredient">ingredient</string>
+    <string name="recipe_nutrition_ingredients">ingredients</string>
+    <string name="recipe_nutrition_per_serving">Per Serving (makes %1$s servings)</string>
+    <string name="recipe_nutrition_calories_unit"> calories</string>
+    <string name="recipe_nutrition_protein">Protein</string>
+    <string name="recipe_nutrition_fat">Fat</string>
+    <string name="recipe_nutrition_carbs">Carbs</string>
+    <string name="recipe_nutrition_macro_g">g</string>
+    <string name="recipe_nutrition_total">Total Recipe</string>
+    <string name="recipe_nutrition_total_cal">%1$s cal</string>
+    <string name="recipe_nutrition_total_macros">P: %1$sg | F: %2$sg | C: %3$sg</string>
+
+    <!-- ============================================================ -->
+    <!-- C-030 ServingUnitDropdown                                    -->
+    <!-- ============================================================ -->
+    <string name="serving_unit_default_label">Unit</string>
+    <string name="serving_unit_selector_description">Serving unit selector. Currently selected: %1$s</string>
+    <string name="serving_unit_option">%1$s (%2$s)</string>
+    <string name="serving_unit_select_option">Select %1$s</string>
+    <string name="serving_unit_compact_description">Serving unit: %1$s. Tap to change.</string>
+
+    <!-- ============================================================ -->
+    <!-- S-006 CreateCustomFoodScreen                                 -->
+    <!-- ============================================================ -->
+    <string name="create_food_title_edit">Edit Custom Food</string>
+    <string name="create_food_title_create">Create Custom Food</string>
+    <string name="create_food_name_label">Food Name</string>
+    <string name="create_food_name_placeholder">e.g., Homemade Granola</string>
+    <string name="create_food_name_input_description">Food name input</string>
+    <string name="create_food_duplicate_warning">A food with this name already exists</string>
+    <string name="create_food_serving_size">Serving Size</string>
+    <string name="create_food_amount_label">Amount</string>
+    <string name="create_food_amount_placeholder">100</string>
+    <string name="create_food_serving_amount_description">Serving size amount</string>
+    <string name="create_food_nutrition_section">Nutritional Information (per serving)</string>
+    <string name="create_food_cancel">Cancel</string>
+    <string name="create_food_save_changes">Save Changes</string>
+    <string name="create_food_create">Create Food</string>
+
+    <!-- ============================================================ -->
+    <!-- S-007 CustomFoodListScreen                                   -->
+    <!-- ============================================================ -->
+    <string name="custom_food_list_title">My Foods</string>
+    <string name="custom_food_list_empty_title">No custom foods yet</string>
+    <string name="custom_food_list_empty_message">Tap the + button to create your first custom food or recipe</string>
+    <string name="custom_food_list_section_foods">Custom Foods</string>
+    <string name="custom_food_list_section_recipes">Recipes</string>
+    <string name="custom_food_list_section_count">%1$d %2$s</string>
+    <string name="custom_food_list_item">item</string>
+    <string name="custom_food_list_items">items</string>
+    <string name="custom_food_list_item_description">%1$s, %2$d calories per serving. Tap to edit.</string>
+    <string name="custom_food_list_serving">%1$s %2$s</string>
+    <string name="custom_food_list_macros">P: %1$sg | F: %2$sg | C: %3$sg</string>
+    <string name="custom_food_list_edit">Edit %1$s</string>
+    <string name="custom_food_list_delete">Delete %1$s</string>
+    <string name="custom_food_list_delete_recipe_title">Delete Recipe?</string>
+    <string name="custom_food_list_delete_food_title">Delete Food?</string>
+    <string name="custom_food_list_delete_confirm_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="custom_food_list_delete_undone">This action cannot be undone.</string>
+    <string name="custom_food_list_delete_confirm">Delete</string>
+    <string name="custom_food_list_delete_cancel">Cancel</string>
+    <string name="custom_food_list_recipe_option">Recipe</string>
+    <string name="custom_food_list_create_recipe">Create recipe</string>
+    <string name="custom_food_list_custom_food_option">Custom Food</string>
+    <string name="custom_food_list_create_food">Create custom food</string>
+    <string name="custom_food_list_close_menu">Close menu</string>
+    <string name="custom_food_list_add_menu">Add custom food or recipe</string>
+    <string name="custom_food_list_cal_suffix"> cal</string>
+
+    <!-- ============================================================ -->
+    <!-- S-008 CreateRecipeScreen                                     -->
+    <!-- ============================================================ -->
+    <string name="create_recipe_title_edit">Edit Recipe</string>
+    <string name="create_recipe_title_create">Create Recipe</string>
+    <string name="create_recipe_name_label">Recipe Name</string>
+    <string name="create_recipe_name_placeholder">e.g., Chicken Stir Fry</string>
+    <string name="create_recipe_name_input_description">Recipe name input</string>
+    <string name="create_recipe_duplicate_warning">A food with this name already exists</string>
+    <string name="create_recipe_servings_label">Number of Servings</string>
+    <string name="create_recipe_servings_placeholder">e.g., 4</string>
+    <string name="create_recipe_servings_description">Number of servings this recipe makes</string>
+    <string name="create_recipe_ingredients">Ingredients</string>
+    <string name="create_recipe_add_ingredient">Add Ingredient</string>
+    <string name="create_recipe_no_ingredients">No ingredients added yet. Tap \"Add Ingredient\" to start building your recipe.</string>
+    <string name="create_recipe_cancel">Cancel</string>
+    <string name="create_recipe_save_changes">Save Changes</string>
+    <string name="create_recipe_create">Create Recipe</string>
+    <string name="create_recipe_picker_title">Add Ingredient</string>
+    <string name="create_recipe_picker_search_description">Search foods to add as ingredient</string>
+    <string name="create_recipe_picker_search_placeholder">Search foods...</string>
+    <string name="create_recipe_picker_clear_search">Clear search</string>
+    <string name="create_recipe_picker_no_foods_title">No foods found</string>
+    <string name="create_recipe_picker_no_foods_message">Try different search terms</string>
+    <string name="create_recipe_picker_cancel">Cancel</string>
+    <string name="create_recipe_picker_back">Back to food list</string>
+    <string name="create_recipe_picker_nutrition_per">Nutrition per %1$s:</string>
+    <string name="create_recipe_picker_nutrition_line">%1$d cal | P: %2$sg | F: %3$sg | C: %4$sg</string>
+    <string name="create_recipe_picker_servings_label">Servings</string>
+    <string name="create_recipe_picker_serving_equals">1 serving = %1$s</string>
+    <string name="create_recipe_picker_add">Add to Recipe</string>
+    <string name="create_recipe_picker_food_description">%1$s, %2$d calories. Tap to select.</string>
+    <string name="create_recipe_picker_serving_amount_unit">%1$s %2$s</string>
+    <string name="create_recipe_picker_cal_suffix"> cal</string>
+
+    <!-- ============================================================ -->
+    <!-- S-001 DailyFoodLogScreen                                     -->
+    <!-- ============================================================ -->
+    <string name="daily_log_app_title">Snaxlog</string>
+    <string name="daily_log_my_foods">My Foods</string>
+    <string name="daily_log_add_food">Add food entry</string>
+    <string name="daily_log_today_summary">Today\'s Summary</string>
+    <string name="daily_log_empty_today_title">No meals logged yet</string>
+    <string name="daily_log_empty_today_message">Start tracking by tapping the + button below</string>
+    <string name="daily_log_empty_historical_title">No meals logged</string>
+    <string name="daily_log_empty_historical_message">No food entries were logged on this day. Tap the + button to add a retroactive entry.</string>
+    <string name="daily_log_delete_title">Delete entry?</string>
+    <string name="daily_log_delete_message">This entry will be permanently removed from your log.</string>
+    <string name="daily_log_servings_display">%1$s servings (%2$s)</string>
+
+    <!-- ============================================================ -->
+    <!-- S-003 AddFoodSheetContent                                    -->
+    <!-- ============================================================ -->
+    <string name="add_food_historical_prefix">Adding entry to: %1$s</string>
+    <string name="add_food_title">Add Food Entry</string>
+    <string name="add_food_search_description">Search foods</string>
+    <string name="add_food_search_placeholder">Search foods...</string>
+    <string name="add_food_clear_search">Clear search</string>
+    <string name="add_food_no_foods_title">No foods found</string>
+    <string name="add_food_no_foods_message">Try different search terms or browse all foods</string>
+    <string name="add_food_cancel">Cancel</string>
+    <string name="add_food_back">Back to food list</string>
+    <string name="add_food_serving">Serving: %1$s</string>
+    <string name="add_food_category">Category: %1$s</string>
+    <string name="add_food_servings_description">Number of servings</string>
+    <string name="add_food_servings_label">Number of servings</string>
+    <string name="add_food_historical_tip">Tip: Select the meal category manually for historical entries</string>
+    <string name="add_food_add_entry">Add Entry</string>
+    <string name="add_food_item_description">%1$s, %2$s, %3$d calories per serving. Tap to select.</string>
+    <string name="add_food_item_cal_suffix"> cal</string>
+
+    <!-- ============================================================ -->
+    <!-- S-004 EditFoodSheetContent                                   -->
+    <!-- ============================================================ -->
+    <string name="edit_food_close">Close</string>
+    <string name="edit_food_entry_from">Entry from: %1$s</string>
+    <string name="edit_food_title">Edit Entry</string>
+    <string name="edit_food_serving">Serving: %1$s</string>
+    <string name="edit_food_servings_description">Number of servings</string>
+    <string name="edit_food_servings_label">Number of servings</string>
+    <string name="edit_food_cancel">Cancel</string>
+    <string name="edit_food_update_entry">Update Entry</string>
+
+    <!-- ============================================================ -->
+    <!-- S-002 GoalManagementScreen                                   -->
+    <!-- ============================================================ -->
+    <string name="goal_management_title">Goals</string>
+    <string name="goal_management_add">Add custom goal</string>
+    <string name="goal_management_empty_title">No goals available</string>
+    <string name="goal_management_empty_message">Add a custom goal to get started</string>
+    <string name="goal_management_select_prompt">Select a goal to start tracking your progress</string>
+    <string name="goal_management_delete_title">Delete goal?</string>
+    <string name="goal_management_delete_active">This is your active goal. Deleting it will remove your daily tracking target.</string>
+    <string name="goal_management_delete_message">\"%1$s\" will be permanently removed.</string>
+
+    <!-- ============================================================ -->
+    <!-- S-005 AddEditGoalSheetContent                                -->
+    <!-- ============================================================ -->
+    <string name="goal_form_title_edit">Edit Goal</string>
+    <string name="goal_form_title_add">Add Custom Goal</string>
+    <string name="goal_form_close">Close</string>
+    <string name="goal_form_name_label">Goal Name</string>
+    <string name="goal_form_name_placeholder">e.g., My Custom Goal</string>
+    <string name="goal_form_calorie_label">Calorie Target</string>
+    <string name="goal_form_calorie_placeholder">e.g., 2000</string>
+    <string name="goal_form_macro_section">Macro Targets (optional)</string>
+    <string name="goal_form_protein_label">Protein (g)</string>
+    <string name="goal_form_protein_placeholder">e.g., 150</string>
+    <string name="goal_form_fat_label">Fat (g)</string>
+    <string name="goal_form_fat_placeholder">e.g., 67</string>
+    <string name="goal_form_carbs_label">Carbs (g)</string>
+    <string name="goal_form_carbs_placeholder">e.g., 200</string>
+    <string name="goal_form_cancel">Cancel</string>
+    <string name="goal_form_update">Update</string>
+    <string name="goal_form_save">Save</string>
 </resources>

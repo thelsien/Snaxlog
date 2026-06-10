@@ -21,10 +21,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.ServingUnit
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
@@ -105,6 +107,14 @@ fun IngredientListItem(
 ) {
     val numberFormat = NumberFormat.getNumberInstance()
 
+    val itemDescription = stringResource(
+        R.string.ingredient_item_description,
+        index,
+        ingredient.foodName,
+        ingredient.quantity.toString(),
+        ingredient.unit.displayName
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -113,7 +123,7 @@ fun IngredientListItem(
                 vertical = Spacing.sm
             )
             .semantics {
-                contentDescription = "Ingredient $index: ${ingredient.foodName}, ${ingredient.quantity} ${ingredient.unit.displayName}"
+                contentDescription = itemDescription
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -121,7 +131,7 @@ fun IngredientListItem(
         if (showDragHandle) {
             Icon(
                 imageVector = Icons.Default.DragHandle,
-                contentDescription = "Drag to reorder",
+                contentDescription = stringResource(R.string.ingredient_item_drag),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(end = Spacing.sm)
             )
@@ -165,12 +175,20 @@ fun IngredientListItem(
                 if (ingredient.quantity == 1.0) {
                     ingredient.servingSizeDisplay
                 } else {
-                    "${ingredient.quantity.formatForDisplay()} × ${ingredient.servingSizeDisplay}"
+                    stringResource(
+                        R.string.ingredient_item_quantity_serving,
+                        ingredient.quantity.formatForDisplay(),
+                        ingredient.servingSizeDisplay
+                    )
                 }
             } else {
                 // For custom foods with numeric serving size
                 val totalAmount = ingredient.totalServingAmount
-                "${totalAmount.formatForDisplay()} ${ingredient.unit.abbreviation}"
+                stringResource(
+                    R.string.ingredient_item_amount_unit,
+                    totalAmount.formatForDisplay(),
+                    ingredient.unit.abbreviation
+                )
             }
             Text(
                 text = displayText,
@@ -192,7 +210,7 @@ fun IngredientListItem(
                     color = MaterialTheme.colorScheme.tertiary
                 )
                 Text(
-                    text = " cal",
+                    text = stringResource(R.string.ingredient_item_cal_suffix),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -206,7 +224,7 @@ fun IngredientListItem(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Remove ${ingredient.foodName}",
+                contentDescription = stringResource(R.string.ingredient_item_remove, ingredient.foodName),
                 tint = MaterialTheme.colorScheme.error
             )
         }
@@ -225,6 +243,14 @@ fun IngredientListItemCompact(
 ) {
     val numberFormat = NumberFormat.getNumberInstance()
 
+    val compactDescription = stringResource(
+        R.string.ingredient_item_compact_description,
+        ingredient.foodName,
+        ingredient.quantity.toString(),
+        ingredient.unit.displayName,
+        ingredient.totalCalories
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -233,7 +259,7 @@ fun IngredientListItemCompact(
                 vertical = Spacing.xs
             )
             .semantics {
-                contentDescription = "${ingredient.foodName}, ${ingredient.quantity} ${ingredient.unit.displayName}, ${ingredient.totalCalories} calories"
+                contentDescription = compactDescription
             },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -243,7 +269,7 @@ fun IngredientListItemCompact(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "$index.",
+                text = stringResource(R.string.ingredient_item_compact_index, index),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(24.dp)
@@ -263,13 +289,21 @@ fun IngredientListItemCompact(
             // Show total amount with serving info
             val displayText = if (ingredient.servingSizeDisplay.isNotEmpty()) {
                 if (ingredient.quantity == 1.0) {
-                    "(${ingredient.servingSizeDisplay})"
+                    stringResource(R.string.ingredient_item_compact_serving, ingredient.servingSizeDisplay)
                 } else {
-                    "(${ingredient.quantity.formatForDisplay()} × ${ingredient.servingSizeDisplay})"
+                    stringResource(
+                        R.string.ingredient_item_compact_quantity_serving,
+                        ingredient.quantity.formatForDisplay(),
+                        ingredient.servingSizeDisplay
+                    )
                 }
             } else {
                 val totalAmount = ingredient.totalServingAmount
-                "(${totalAmount.formatForDisplay()} ${ingredient.unit.abbreviation})"
+                stringResource(
+                    R.string.ingredient_item_compact_amount_unit,
+                    totalAmount.formatForDisplay(),
+                    ingredient.unit.abbreviation
+                )
             }
             Text(
                 text = displayText,
@@ -279,7 +313,7 @@ fun IngredientListItemCompact(
         }
 
         Text(
-            text = "${numberFormat.format(ingredient.totalCalories)} cal",
+            text = stringResource(R.string.ingredient_item_compact_cal, numberFormat.format(ingredient.totalCalories)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.tertiary
         )

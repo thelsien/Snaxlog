@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.ui.theme.CustomFoodDark
 import com.snaxlog.app.ui.theme.CustomFoodLight
@@ -50,6 +52,9 @@ fun FoodTypeBadge(
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val config = getFoodTypeBadgeConfig(foodType, isDarkTheme)
 
+    val label = stringResource(config.labelRes)
+    val badgeDescription = stringResource(R.string.food_type_badge_description, label)
+
     Row(
         modifier = modifier
             .background(
@@ -58,7 +63,7 @@ fun FoodTypeBadge(
             )
             .padding(horizontal = Spacing.xs, vertical = Spacing.xxs)
             .semantics {
-                contentDescription = "${config.label} food"
+                contentDescription = badgeDescription
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -70,7 +75,7 @@ fun FoodTypeBadge(
         )
         if (showLabel) {
             Text(
-                text = config.label,
+                text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = config.color,
                 modifier = Modifier.padding(start = Spacing.xxs)
@@ -83,7 +88,7 @@ fun FoodTypeBadge(
  * Configuration for a food type badge.
  */
 private data class FoodTypeBadgeConfig(
-    val label: String,
+    val labelRes: Int,
     val icon: ImageVector,
     val color: Color
 )
@@ -94,17 +99,17 @@ private data class FoodTypeBadgeConfig(
 private fun getFoodTypeBadgeConfig(foodType: FoodType, isDarkTheme: Boolean): FoodTypeBadgeConfig {
     return when (foodType) {
         FoodType.SIMPLE -> FoodTypeBadgeConfig(
-            label = "Custom",
+            labelRes = R.string.food_type_custom,
             icon = Icons.Outlined.Person,
             color = if (isDarkTheme) CustomFoodDark else CustomFoodLight
         )
         FoodType.RECIPE -> FoodTypeBadgeConfig(
-            label = "Recipe",
+            labelRes = R.string.food_type_recipe,
             icon = Icons.Outlined.Restaurant,
             color = if (isDarkTheme) RecipeDark else RecipeLight
         )
         FoodType.PREDEFINED -> FoodTypeBadgeConfig(
-            label = "",
+            labelRes = R.string.food_type_custom,
             icon = Icons.Outlined.Person,
             color = Color.Transparent
         )

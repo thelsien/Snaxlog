@@ -14,10 +14,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
 
@@ -34,13 +36,18 @@ fun NutritionPreview(
     modifier: Modifier = Modifier
 ) {
     val numberFormat = NumberFormat.getNumberInstance()
-    val description = "${numberFormat.format(totalCalories)} calories. " +
-            "Protein: ${formatValue(totalProtein)}g, Fat: ${formatValue(totalFat)}g, Carbs: ${formatValue(totalCarbs)}g"
+    val description = stringResource(
+        R.string.nutrition_preview_description,
+        numberFormat.format(totalCalories),
+        formatValue(totalProtein),
+        formatValue(totalFat),
+        formatValue(totalCarbs)
+    )
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Nutrition preview. $description" },
+            .semantics { contentDescription = description },
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
@@ -49,7 +56,7 @@ fun NutritionPreview(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Nutrition Preview",
+                text = stringResource(R.string.nutrition_preview_title),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -57,7 +64,7 @@ fun NutritionPreview(
             Spacer(modifier = Modifier.height(Spacing.sm))
 
             Text(
-                text = "${numberFormat.format(totalCalories)} calories",
+                text = stringResource(R.string.nutrition_preview_calories, numberFormat.format(totalCalories)),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center

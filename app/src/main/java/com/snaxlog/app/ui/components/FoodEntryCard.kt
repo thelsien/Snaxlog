@@ -29,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.theme.BreakfastDark
 import com.snaxlog.app.ui.theme.BreakfastLight
@@ -65,7 +67,14 @@ fun FoodEntryCard(
     mealCategory: MealCategory? = null
 ) {
     val numberFormat = NumberFormat.getNumberInstance()
-    val description = "$foodName, $servingSize, ${numberFormat.format(calories)} calories, logged at $timestamp. Tap to edit, swipe to delete."
+    val description = stringResource(
+        R.string.food_entry_description,
+        foodName,
+        servingSize,
+        numberFormat.format(calories),
+        timestamp
+    )
+    val deleteEntryDescription = stringResource(R.string.food_entry_delete)
 
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -104,7 +113,7 @@ fun FoodEntryCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete entry",
+                    contentDescription = deleteEntryDescription,
                     tint = MaterialTheme.colorScheme.onError,
                     modifier = Modifier.size(24.dp)
                 )
@@ -171,7 +180,7 @@ fun FoodEntryCard(
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                             Text(
-                                text = " cal",
+                                text = stringResource(R.string.food_entry_cal_suffix),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

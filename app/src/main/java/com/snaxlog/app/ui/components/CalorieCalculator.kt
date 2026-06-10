@@ -16,9 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
@@ -58,7 +61,14 @@ fun CalorieCalculator(
     val numberFormat = NumberFormat.getNumberInstance()
     val caloriesText = numberFormat.format(totalCalories)
 
-    val description = "$totalCalories calories calculated from ${protein}g protein, ${fat}g fat, ${carbs}g carbs"
+    val context = LocalContext.current
+    val description = context.getString(
+        R.string.calorie_calculator_description,
+        totalCalories,
+        protein.toString(),
+        fat.toString(),
+        carbs.toString()
+    )
 
     Column(
         modifier = modifier
@@ -88,7 +98,7 @@ fun CalorieCalculator(
                     modifier = Modifier.padding(end = Spacing.sm)
                 )
                 Text(
-                    text = "Calculated Calories",
+                    text = stringResource(R.string.calorie_calculator_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -102,7 +112,7 @@ fun CalorieCalculator(
                     color = MaterialTheme.colorScheme.tertiary
                 )
                 Text(
-                    text = " cal",
+                    text = stringResource(R.string.calorie_calculator_cal_unit),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -112,7 +122,7 @@ fun CalorieCalculator(
 
         if (showFormula) {
             Text(
-                text = buildFormulaString(protein, fat, carbs, proteinCalories, fatCalories, carbsCalories),
+                text = buildFormulaString(context, protein, fat, carbs, proteinCalories, fatCalories, carbsCalories),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = Spacing.sm)
@@ -125,6 +135,7 @@ fun CalorieCalculator(
  * Builds the formula breakdown string.
  */
 private fun buildFormulaString(
+    context: android.content.Context,
     protein: Double,
     fat: Double,
     carbs: Double,
@@ -136,9 +147,12 @@ private fun buildFormulaString(
     val fatStr = formatMacro(fat)
     val carbsStr = formatMacro(carbs)
 
-    return "(${proteinStr}g protein x 4 = $proteinCal) + " +
-            "(${carbsStr}g carbs x 4 = $carbsCal) + " +
-            "(${fatStr}g fat x 9 = $fatCal)"
+    return context.getString(
+        R.string.calorie_calculator_formula,
+        proteinStr, proteinCal,
+        carbsStr, carbsCal,
+        fatStr, fatCal
+    )
 }
 
 /**

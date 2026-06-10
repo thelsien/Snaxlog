@@ -31,9 +31,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.components.DeleteConfirmationDialog
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.GoalCard
@@ -52,6 +54,7 @@ fun GoalManagementScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val addGoalDescription = stringResource(R.string.goal_management_add)
 
     // Bottom sheet state
     var showGoalFormSheet by remember { mutableStateOf(false) }
@@ -74,7 +77,7 @@ fun GoalManagementScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Goals",
+                        text = stringResource(R.string.goal_management_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -82,7 +85,7 @@ fun GoalManagementScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
+                            contentDescription = stringResource(R.string.common_go_back)
                         )
                     }
                 },
@@ -101,7 +104,7 @@ fun GoalManagementScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.semantics {
-                        contentDescription = "Add custom goal"
+                        contentDescription = addGoalDescription
                     }
                 ) {
                     Icon(
@@ -133,7 +136,7 @@ fun GoalManagementScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.error ?: "Unknown error",
+                        text = uiState.error ?: stringResource(R.string.common_unknown_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -148,8 +151,8 @@ fun GoalManagementScreen(
                             .padding(paddingValues)
                     ) {
                         EmptyStateView(
-                            title = "No goals available",
-                            message = "Add a custom goal to get started"
+                            title = stringResource(R.string.goal_management_empty_title),
+                            message = stringResource(R.string.goal_management_empty_message)
                         )
                     }
                 } else {
@@ -166,7 +169,7 @@ fun GoalManagementScreen(
                         if (uiState.activeGoalId == null) {
                             item(key = "prompt") {
                                 Text(
-                                    text = "Select a goal to start tracking your progress",
+                                    text = stringResource(R.string.goal_management_select_prompt),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(
@@ -209,11 +212,11 @@ fun GoalManagementScreen(
         // Delete confirmation dialog
         uiState.deleteDialogGoal?.let { goal ->
             DeleteConfirmationDialog(
-                title = "Delete goal?",
+                title = stringResource(R.string.goal_management_delete_title),
                 message = if (goal.id == uiState.activeGoalId) {
-                    "This is your active goal. Deleting it will remove your daily tracking target."
+                    stringResource(R.string.goal_management_delete_active)
                 } else {
-                    "\"${goal.name}\" will be permanently removed."
+                    stringResource(R.string.goal_management_delete_message, goal.name)
                 },
                 onConfirm = { viewModel.confirmDeleteGoal() },
                 onDismiss = { viewModel.dismissDeleteDialog() }

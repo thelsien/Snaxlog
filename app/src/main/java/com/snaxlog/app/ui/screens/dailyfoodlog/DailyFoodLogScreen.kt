@@ -39,9 +39,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.snaxlog.app.R
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -76,6 +78,7 @@ fun DailyFoodLogScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val addFoodEntryDescription = stringResource(R.string.daily_log_add_food)
 
     // Bottom sheet states
     var showAddFoodSheet by remember { mutableStateOf(false) }
@@ -117,15 +120,16 @@ fun DailyFoodLogScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = "Snaxlog",
+                            text = stringResource(R.string.daily_log_app_title),
                             style = MaterialTheme.typography.titleLarge
                         )
                     },
                     actions = {
+                        val myFoodsDescription = stringResource(R.string.daily_log_my_foods)
                         IconButton(
                             onClick = onNavigateToCustomFoods,
                             modifier = Modifier.semantics {
-                                contentDescription = "My Foods"
+                                contentDescription = myFoodsDescription
                             }
                         ) {
                             Icon(
@@ -171,7 +175,7 @@ fun DailyFoodLogScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.semantics {
-                        contentDescription = "Add food entry"
+                        contentDescription = addFoodEntryDescription
                     }
                 ) {
                     Icon(
@@ -203,7 +207,7 @@ fun DailyFoodLogScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.error ?: "Unknown error",
+                        text = uiState.error ?: stringResource(R.string.common_unknown_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -238,7 +242,7 @@ fun DailyFoodLogScreen(
                     // FIP-EPIC-005 US-014: Dynamic title based on selected date
                     item(key = "summary") {
                         val summaryTitle = if (uiState.isViewingToday) {
-                            "Today's Summary"
+                            stringResource(R.string.daily_log_today_summary)
                         } else {
                             val formatter = DateTimeFormatter.ofPattern("EEEE'''s Summary'", Locale.getDefault())
                             uiState.selectedDate.format(formatter)
@@ -263,13 +267,13 @@ fun DailyFoodLogScreen(
                         item(key = "empty") {
                             if (uiState.isViewingToday) {
                                 EmptyStateView(
-                                    title = "No meals logged yet",
-                                    message = "Start tracking by tapping the + button below"
+                                    title = stringResource(R.string.daily_log_empty_today_title),
+                                    message = stringResource(R.string.daily_log_empty_today_message)
                                 )
                             } else {
                                 EmptyStateView(
-                                    title = "No meals logged",
-                                    message = "No food entries were logged on this day. Tap the + button to add a retroactive entry."
+                                    title = stringResource(R.string.daily_log_empty_historical_title),
+                                    message = stringResource(R.string.daily_log_empty_historical_message)
                                 )
                             }
                         }
@@ -302,8 +306,9 @@ fun DailyFoodLogScreen(
                             ) { entryWithFood ->
                                 val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
                                 val timeStr = timeFormat.format(Date(entryWithFood.entry.timestamp))
-                                val servingsText = formatServingsDisplay(
-                                    entryWithFood.entry.servings,
+                                val servingsText = stringResource(
+                                    R.string.daily_log_servings_display,
+                                    formatServingsCount(entryWithFood.entry.servings),
                                     entryWithFood.food.servingSize
                                 )
 
@@ -334,8 +339,8 @@ fun DailyFoodLogScreen(
         // Delete confirmation dialog
         uiState.deleteDialogEntry?.let {
             DeleteConfirmationDialog(
-                title = "Delete entry?",
-                message = "This entry will be permanently removed from your log.",
+                title = stringResource(R.string.daily_log_delete_title),
+                message = stringResource(R.string.daily_log_delete_message),
                 onConfirm = { viewModel.confirmDeleteEntry() },
                 onDismiss = { viewModel.dismissDeleteDialog() }
             )
@@ -378,13 +383,12 @@ fun DailyFoodLogScreen(
     }
 }
 
-private fun formatServingsDisplay(servings: Double, servingSize: String): String {
-    val servingsStr = if (servings == servings.toLong().toDouble()) {
+private fun formatServingsCount(servings: Double): String {
+    return if (servings == servings.toLong().toDouble()) {
         "${servings.toLong()}.0"
     } else {
         String.format(Locale.getDefault(), "%.2f", servings).trimEnd('0').let {
             if (it.endsWith(".")) "${it}0" else it
         }
     }
-    return "$servingsStr servings ($servingSize)"
 }

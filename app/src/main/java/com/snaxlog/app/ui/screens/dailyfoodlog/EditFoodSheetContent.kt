@@ -21,8 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.snaxlog.app.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,13 +72,13 @@ fun EditFoodSheetContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = state.error ?: "Unknown error",
+                        text = state.error ?: stringResource(R.string.common_unknown_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(Spacing.base))
                     TextButton(onClick = onDismiss) {
-                        Text("Close")
+                        Text(stringResource(R.string.edit_food_close))
                     }
                 }
             }
@@ -99,7 +101,7 @@ fun EditFoodSheetContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Entry from: $formattedDate",
+                            text = stringResource(R.string.edit_food_entry_from, formattedDate),
                             style = MaterialTheme.typography.bodySmall,
                             color = customColors.historicalDate
                         )
@@ -108,7 +110,7 @@ fun EditFoodSheetContent(
                 }
 
                 Text(
-                    text = "Edit Entry",
+                    text = stringResource(R.string.edit_food_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -122,7 +124,7 @@ fun EditFoodSheetContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Serving: ${food.servingSize}",
+                    text = stringResource(R.string.edit_food_serving, food.servingSize),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -130,13 +132,14 @@ fun EditFoodSheetContent(
                 Spacer(modifier = Modifier.height(Spacing.base))
 
                 // Serving size input
+                val servingsDescription = stringResource(R.string.edit_food_servings_description)
                 OutlinedTextField(
                     value = state.servingsInput,
                     onValueChange = { viewModel.updateEditFoodServings(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { contentDescription = "Number of servings" },
-                    label = { Text("Number of servings") },
+                        .semantics { contentDescription = servingsDescription },
+                    label = { Text(stringResource(R.string.edit_food_servings_label)) },
                     isError = state.servingsError != null,
                     supportingText = state.servingsError?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
@@ -173,7 +176,7 @@ fun EditFoodSheetContent(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.edit_food_cancel))
                     }
                     Spacer(modifier = Modifier.width(Spacing.sm))
                     Button(
@@ -189,7 +192,7 @@ fun EditFoodSheetContent(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text("Update Entry")
+                            Text(stringResource(R.string.edit_food_update_entry))
                         }
                     }
                 }

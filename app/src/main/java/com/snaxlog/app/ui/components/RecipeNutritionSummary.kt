@@ -20,9 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.CarbsDark
 import com.snaxlog.app.ui.theme.CarbsLight
 import com.snaxlog.app.ui.theme.FatDark
@@ -68,8 +70,13 @@ fun RecipeNutritionSummary(
     val perServingFat = if (numberOfServings > 0) totalFat / numberOfServings else 0.0
     val perServingCarbs = if (numberOfServings > 0) totalCarbs / numberOfServings else 0.0
 
-    val description = "Recipe nutrition: $totalCalories total calories, $perServingCalories per serving. " +
-            "$ingredientCount ingredients making ${numberOfServings.formatForDisplay()} servings."
+    val description = stringResource(
+        R.string.recipe_nutrition_description,
+        totalCalories,
+        perServingCalories,
+        ingredientCount,
+        numberOfServings.formatForDisplay()
+    )
 
     Column(
         modifier = modifier
@@ -100,13 +107,21 @@ fun RecipeNutritionSummary(
                     modifier = Modifier.padding(end = Spacing.sm)
                 )
                 Text(
-                    text = "Recipe Nutrition",
+                    text = stringResource(R.string.recipe_nutrition_title),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
             Text(
-                text = "$ingredientCount ${if (ingredientCount == 1) "ingredient" else "ingredients"}",
+                text = stringResource(
+                    R.string.recipe_nutrition_ingredient_count,
+                    ingredientCount,
+                    if (ingredientCount == 1) {
+                        stringResource(R.string.recipe_nutrition_ingredient)
+                    } else {
+                        stringResource(R.string.recipe_nutrition_ingredients)
+                    }
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -116,7 +131,7 @@ fun RecipeNutritionSummary(
 
         // Per Serving Section
         Text(
-            text = "Per Serving (makes ${numberOfServings.formatForDisplay()} servings)",
+            text = stringResource(R.string.recipe_nutrition_per_serving, numberOfServings.formatForDisplay()),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -135,7 +150,7 @@ fun RecipeNutritionSummary(
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(
-                text = " calories",
+                text = stringResource(R.string.recipe_nutrition_calories_unit),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -150,17 +165,17 @@ fun RecipeNutritionSummary(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             MacroColumn(
-                label = "Protein",
+                label = stringResource(R.string.recipe_nutrition_protein),
                 value = perServingProtein,
                 color = if (isDarkTheme) ProteinDark else ProteinLight
             )
             MacroColumn(
-                label = "Fat",
+                label = stringResource(R.string.recipe_nutrition_fat),
                 value = perServingFat,
                 color = if (isDarkTheme) FatDark else FatLight
             )
             MacroColumn(
-                label = "Carbs",
+                label = stringResource(R.string.recipe_nutrition_carbs),
                 value = perServingCarbs,
                 color = if (isDarkTheme) CarbsDark else CarbsLight
             )
@@ -172,7 +187,7 @@ fun RecipeNutritionSummary(
 
         // Total Section
         Text(
-            text = "Total Recipe",
+            text = stringResource(R.string.recipe_nutrition_total),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -184,12 +199,20 @@ fun RecipeNutritionSummary(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "${numberFormat.format(totalCalories)} cal",
+                text = stringResource(
+                    R.string.recipe_nutrition_total_cal,
+                    numberFormat.format(totalCalories)
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "P: ${totalProtein.formatForDisplay()}g | F: ${totalFat.formatForDisplay()}g | C: ${totalCarbs.formatForDisplay()}g",
+                text = stringResource(
+                    R.string.recipe_nutrition_total_macros,
+                    totalProtein.formatForDisplay(),
+                    totalFat.formatForDisplay(),
+                    totalCarbs.formatForDisplay()
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -223,7 +246,7 @@ private fun MacroColumn(
                 color = color
             )
             Text(
-                text = "g",
+                text = stringResource(R.string.recipe_nutrition_macro_g),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

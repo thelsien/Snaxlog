@@ -30,10 +30,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
 
@@ -58,10 +61,18 @@ fun GoalCard(
     modifier: Modifier = Modifier
 ) {
     val numberFormat = NumberFormat.getNumberInstance()
-    val typeLabel = if (isPredefined) "Pre-defined" else "Custom"
-    val activeLabel = if (isActive) "Active goal." else ""
-    val macroInfo = buildMacroDescription(proteinTarget, fatTarget, carbsTarget)
-    val description = "$goalName, ${numberFormat.format(calorieTarget)} calories. $typeLabel. $activeLabel $macroInfo Tap to select."
+    val context = LocalContext.current
+    val typeLabel = if (isPredefined) stringResource(R.string.goal_card_predefined) else stringResource(R.string.goal_card_custom)
+    val activeLabel = if (isActive) stringResource(R.string.goal_card_active) else ""
+    val macroInfo = buildMacroDescription(context, proteinTarget, fatTarget, carbsTarget)
+    val description = stringResource(
+        R.string.goal_card_description,
+        goalName,
+        numberFormat.format(calorieTarget),
+        typeLabel,
+        activeLabel,
+        macroInfo
+    )
 
     val cardShape = RoundedCornerShape(12.dp)
     val containerColor = if (isActive) {
@@ -108,7 +119,7 @@ fun GoalCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete goal",
+                        contentDescription = stringResource(R.string.goal_card_delete),
                         tint = MaterialTheme.colorScheme.onError,
                         modifier = Modifier.size(24.dp)
                     )
@@ -170,6 +181,7 @@ private fun GoalCardContent(
     description: String
 ) {
     val numberFormat = NumberFormat.getNumberInstance()
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
@@ -219,7 +231,7 @@ private fun GoalCardContent(
                     )
                     if (!isPredefined) {
                         Text(
-                            text = "Custom",
+                            text = stringResource(R.string.goal_card_custom),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -227,7 +239,7 @@ private fun GoalCardContent(
                 }
 
                 Text(
-                    text = "${numberFormat.format(calorieTarget)} cal",
+                    text = "${numberFormat.format(calorieTarget)}${stringResource(R.string.goal_card_cal_suffix)}",
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (isActive) {
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -239,7 +251,7 @@ private fun GoalCardContent(
 
                 // Show macro targets if available
                 if (proteinTarget != null || fatTarget != null || carbsTarget != null) {
-                    val macroText = buildMacroText(proteinTarget, fatTarget, carbsTarget)
+                    val macroText = buildMacroText(context, proteinTarget, fatTarget, carbsTarget)
                     Text(
                         text = macroText,
                         style = MaterialTheme.typography.bodySmall,
@@ -258,7 +270,7 @@ private fun GoalCardContent(
                 IconButton(onClick = onEdit) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit goal",
+                        contentDescription = stringResource(R.string.goal_card_edit),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
@@ -269,7 +281,7 @@ private fun GoalCardContent(
             if (isActive) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Active goal",
+                    contentDescription = stringResource(R.string.goal_card_active_indicator),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
@@ -278,19 +290,19 @@ private fun GoalCardContent(
     }
 }
 
-private fun buildMacroText(protein: Double?, fat: Double?, carbs: Double?): String {
+private fun buildMacroText(context: android.content.Context, protein: Double?, fat: Double?, carbs: Double?): String {
     val parts = mutableListOf<String>()
-    protein?.let { parts.add("P: ${formatMacroValue(it)}g") }
-    fat?.let { parts.add("F: ${formatMacroValue(it)}g") }
-    carbs?.let { parts.add("C: ${formatMacroValue(it)}g") }
+    protein?.let { parts.add(context.getString(R.string.goal_card_macro_protein, formatMacroValue(it))) }
+    fat?.let { parts.add(context.getString(R.string.goal_card_macro_fat, formatMacroValue(it))) }
+    carbs?.let { parts.add(context.getString(R.string.goal_card_macro_carbs, formatMacroValue(it))) }
     return parts.joinToString("  ")
 }
 
-private fun buildMacroDescription(protein: Double?, fat: Double?, carbs: Double?): String {
+private fun buildMacroDescription(context: android.content.Context, protein: Double?, fat: Double?, carbs: Double?): String {
     val parts = mutableListOf<String>()
-    protein?.let { parts.add("Protein: ${formatMacroValue(it)}g") }
-    fat?.let { parts.add("Fat: ${formatMacroValue(it)}g") }
-    carbs?.let { parts.add("Carbs: ${formatMacroValue(it)}g") }
+    protein?.let { parts.add(context.getString(R.string.goal_card_macro_desc_protein, formatMacroValue(it))) }
+    fat?.let { parts.add(context.getString(R.string.goal_card_macro_desc_fat, formatMacroValue(it))) }
+    carbs?.let { parts.add(context.getString(R.string.goal_card_macro_desc_carbs, formatMacroValue(it))) }
     return if (parts.isNotEmpty()) parts.joinToString(", ") + "." else ""
 }
 

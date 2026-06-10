@@ -34,11 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.theme.BreakfastDark
 import com.snaxlog.app.ui.theme.BreakfastLight
@@ -83,7 +85,7 @@ fun MealCategorySelector(
     Column(modifier = modifier.fillMaxWidth()) {
         if (showLabel) {
             Text(
-                text = "Meal Category (Optional)",
+                text = stringResource(R.string.meal_selector_label),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -159,13 +161,18 @@ private fun CategoryFilterChip(
     )
 
     val categoryColor = config.getColor(isDarkTheme)
-    val selectionDescription = if (selected) "selected" else "unselected"
-    val chipDescription = "${config.label} category chip, $selectionDescription"
+    val label = stringResource(config.labelRes)
+    val selectionDescription = if (selected) {
+        stringResource(R.string.meal_selector_chip_selected)
+    } else {
+        stringResource(R.string.meal_selector_chip_unselected)
+    }
+    val chipDescription = stringResource(R.string.meal_selector_chip_description, label, selectionDescription)
 
     FilterChip(
         selected = selected,
         onClick = onSelect,
-        label = { Text(config.label) },
+        label = { Text(label) },
         leadingIcon = {
             Icon(
                 imageVector = config.icon,
@@ -209,7 +216,7 @@ private fun CategoryFilterChip(
  */
 private data class CategoryChipConfig(
     val category: MealCategory?,
-    val label: String,
+    val labelRes: Int,
     val icon: ImageVector,
     val lightColor: Color,
     val darkColor: Color
@@ -225,35 +232,35 @@ private data class CategoryChipConfig(
 private fun getCategoryChipConfigs(): List<CategoryChipConfig> = listOf(
     CategoryChipConfig(
         category = MealCategory.BREAKFAST,
-        label = "Breakfast",
+        labelRes = R.string.meal_category_breakfast,
         icon = Icons.Outlined.WbSunny,
         lightColor = BreakfastLight,
         darkColor = BreakfastDark
     ),
     CategoryChipConfig(
         category = MealCategory.LUNCH,
-        label = "Lunch",
+        labelRes = R.string.meal_category_lunch,
         icon = Icons.Outlined.LightMode,
         lightColor = LunchLight,
         darkColor = LunchDark
     ),
     CategoryChipConfig(
         category = MealCategory.DINNER,
-        label = "Dinner",
+        labelRes = R.string.meal_category_dinner,
         icon = Icons.Outlined.DarkMode,
         lightColor = DinnerLight,
         darkColor = DinnerDark
     ),
     CategoryChipConfig(
         category = MealCategory.SNACKING,
-        label = "Snacking",
+        labelRes = R.string.meal_category_snacking,
         icon = Icons.Outlined.NightsStay,
         lightColor = SnackingLight,
         darkColor = SnackingDark
     ),
     CategoryChipConfig(
         category = null,
-        label = "None",
+        labelRes = R.string.meal_category_none,
         icon = Icons.Outlined.RemoveCircleOutline,
         lightColor = UncategorizedLight,
         darkColor = UncategorizedDark

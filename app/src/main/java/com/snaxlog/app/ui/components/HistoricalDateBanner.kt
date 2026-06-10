@@ -19,11 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 import com.snaxlog.app.ui.theme.Spacing
 import java.time.LocalDate
@@ -64,7 +66,8 @@ fun HistoricalDateBanner(
     val formattedDate = formatBannerDate(date)
     val fullDateDescription = formatFullDateForAccessibility(date)
 
-    val bannerDescription = "Viewing historical date: $fullDateDescription. Tap 'Return to Today' to go back to current day."
+    val bannerDescription = stringResource(R.string.historical_banner_description, fullDateDescription)
+    val returnToTodayDescription = stringResource(R.string.historical_banner_return_to_today)
 
     Row(
         modifier = modifier
@@ -91,7 +94,7 @@ fun HistoricalDateBanner(
             )
             Spacer(modifier = Modifier.width(Spacing.sm))
             Text(
-                text = "Viewing $formattedDate",
+                text = stringResource(R.string.historical_banner_viewing, formattedDate),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -101,11 +104,11 @@ fun HistoricalDateBanner(
         TextButton(
             onClick = onReturnToToday,
             modifier = Modifier.semantics {
-                contentDescription = "Return to today"
+                contentDescription = returnToTodayDescription
             }
         ) {
             Text(
-                text = "Return to Today",
+                text = stringResource(R.string.historical_banner_return),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )

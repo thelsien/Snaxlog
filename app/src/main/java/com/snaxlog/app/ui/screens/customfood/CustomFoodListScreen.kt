@@ -56,12 +56,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.ui.components.EmptyStateView
@@ -118,12 +120,12 @@ fun CustomFoodListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Foods") },
+                title = { Text(stringResource(R.string.custom_food_list_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
+                            contentDescription = stringResource(R.string.common_navigate_back)
                         )
                     }
                 },
@@ -162,8 +164,8 @@ fun CustomFoodListScreen(
 
                 listState.foods.isEmpty() -> {
                     EmptyStateView(
-                        title = "No custom foods yet",
-                        message = "Tap the + button to create your first custom food or recipe"
+                        title = stringResource(R.string.custom_food_list_empty_title),
+                        message = stringResource(R.string.custom_food_list_empty_message)
                     )
                 }
 
@@ -179,7 +181,7 @@ fun CustomFoodListScreen(
                         if (simpleFoods.isNotEmpty()) {
                             item {
                                 SectionHeader(
-                                    title = "Custom Foods",
+                                    title = stringResource(R.string.custom_food_list_section_foods),
                                     count = simpleFoods.size
                                 )
                             }
@@ -201,7 +203,7 @@ fun CustomFoodListScreen(
                         if (recipes.isNotEmpty()) {
                             item {
                                 SectionHeader(
-                                    title = "Recipes",
+                                    title = stringResource(R.string.custom_food_list_section_recipes),
                                     count = recipes.size
                                 )
                             }
@@ -265,7 +267,15 @@ private fun SectionHeader(
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "$count ${if (count == 1) "item" else "items"}",
+            text = stringResource(
+                R.string.custom_food_list_section_count,
+                count,
+                if (count == 1) {
+                    stringResource(R.string.custom_food_list_item)
+                } else {
+                    stringResource(R.string.custom_food_list_items)
+                }
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -283,6 +293,11 @@ private fun CustomFoodListItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val itemDescription = stringResource(
+        R.string.custom_food_list_item_description,
+        food.name,
+        food.caloriesPerServing
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -292,7 +307,7 @@ private fun CustomFoodListItem(
                 vertical = Spacing.listItemPaddingVertical
             )
             .semantics {
-                contentDescription = "${food.name}, ${food.caloriesPerServing} calories per serving. Tap to edit."
+                contentDescription = itemDescription
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -322,14 +337,23 @@ private fun CustomFoodListItem(
 
             // Serving info
             Text(
-                text = "${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}",
+                text = stringResource(
+                    R.string.custom_food_list_serving,
+                    food.servingSizeValue.formatForDisplay(),
+                    food.servingUnit.abbreviation
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Nutrition summary
             Text(
-                text = "P: ${food.proteinPerServing.formatForDisplay()}g | F: ${food.fatPerServing.formatForDisplay()}g | C: ${food.carbsPerServing.formatForDisplay()}g",
+                text = stringResource(
+                    R.string.custom_food_list_macros,
+                    food.proteinPerServing.formatForDisplay(),
+                    food.fatPerServing.formatForDisplay(),
+                    food.carbsPerServing.formatForDisplay()
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -348,7 +372,7 @@ private fun CustomFoodListItem(
                     color = MaterialTheme.colorScheme.tertiary
                 )
                 Text(
-                    text = " cal",
+                    text = stringResource(R.string.custom_food_list_cal_suffix),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -361,7 +385,7 @@ private fun CustomFoodListItem(
         IconButton(onClick = onEdit) {
             Icon(
                 imageVector = Icons.Default.Edit,
-                contentDescription = "Edit ${food.name}",
+                contentDescription = stringResource(R.string.custom_food_list_edit, food.name),
                 tint = MaterialTheme.colorScheme.primary
             )
         }
@@ -369,7 +393,7 @@ private fun CustomFoodListItem(
         IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Delete ${food.name}",
+                contentDescription = stringResource(R.string.custom_food_list_delete, food.name),
                 tint = MaterialTheme.colorScheme.error
             )
         }
@@ -391,12 +415,18 @@ private fun DeleteCustomFoodDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Delete ${if (food.foodType == FoodType.RECIPE) "Recipe" else "Food"}?")
+            Text(
+                text = if (food.foodType == FoodType.RECIPE) {
+                    stringResource(R.string.custom_food_list_delete_recipe_title)
+                } else {
+                    stringResource(R.string.custom_food_list_delete_food_title)
+                }
+            )
         },
         text = {
             Column {
                 Text(
-                    text = "Are you sure you want to delete \"${food.name}\"?"
+                    text = stringResource(R.string.custom_food_list_delete_confirm_message, food.name)
                 )
                 if (warningMessage != null) {
                     Spacer(modifier = Modifier.height(Spacing.sm))
@@ -415,7 +445,7 @@ private fun DeleteCustomFoodDialog(
                 }
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "This action cannot be undone.",
+                    text = stringResource(R.string.custom_food_list_delete_undone),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -426,14 +456,14 @@ private fun DeleteCustomFoodDialog(
                 onClick = onConfirm
             ) {
                 Text(
-                    text = "Delete",
+                    text = stringResource(R.string.custom_food_list_delete_confirm),
                     color = MaterialTheme.colorScheme.error
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.custom_food_list_delete_cancel))
             }
         }
     )
@@ -474,7 +504,7 @@ private fun ExpandableFab(
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "Recipe",
+                        text = stringResource(R.string.custom_food_list_recipe_option),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
@@ -492,7 +522,7 @@ private fun ExpandableFab(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MenuBook,
-                            contentDescription = "Create recipe"
+                            contentDescription = stringResource(R.string.custom_food_list_create_recipe)
                         )
                     }
                 }
@@ -503,7 +533,7 @@ private fun ExpandableFab(
                     horizontalArrangement = Arrangement.End
                 ) {
                     Text(
-                        text = "Custom Food",
+                        text = stringResource(R.string.custom_food_list_custom_food_option),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
@@ -521,7 +551,7 @@ private fun ExpandableFab(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Fastfood,
-                            contentDescription = "Create custom food"
+                            contentDescription = stringResource(R.string.custom_food_list_create_food)
                         )
                     }
                 }
@@ -538,7 +568,11 @@ private fun ExpandableFab(
         ) {
             Icon(
                 imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
-                contentDescription = if (expanded) "Close menu" else "Add custom food or recipe",
+                contentDescription = if (expanded) {
+                    stringResource(R.string.custom_food_list_close_menu)
+                } else {
+                    stringResource(R.string.custom_food_list_add_menu)
+                },
                 modifier = Modifier.rotate(rotation)
             )
         }

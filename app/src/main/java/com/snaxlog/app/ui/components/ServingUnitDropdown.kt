@@ -17,8 +17,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.ServingUnit
 import com.snaxlog.app.ui.theme.Spacing
 
@@ -42,10 +44,14 @@ fun ServingUnitDropdown(
     selectedUnit: ServingUnit,
     onUnitChange: (ServingUnit) -> Unit,
     modifier: Modifier = Modifier,
-    label: String = "Unit",
+    label: String = stringResource(R.string.serving_unit_default_label),
     enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val selectorDescription = stringResource(
+        R.string.serving_unit_selector_description,
+        selectedUnit.displayName
+    )
 
     Column(modifier = modifier) {
         ExposedDropdownMenuBox(
@@ -63,7 +69,7 @@ fun ServingUnitDropdown(
                     .fillMaxWidth()
                     .menuAnchor()
                     .semantics {
-                        contentDescription = "Serving unit selector. Currently selected: ${selectedUnit.displayName}"
+                        contentDescription = selectorDescription
                     },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -76,10 +82,18 @@ fun ServingUnitDropdown(
                 onDismissRequest = { expanded = false }
             ) {
                 ServingUnit.entries.forEach { unit ->
+                    val selectDescription = stringResource(
+                        R.string.serving_unit_select_option,
+                        unit.displayName
+                    )
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "${unit.displayName} (${unit.abbreviation})",
+                                text = stringResource(
+                                    R.string.serving_unit_option,
+                                    unit.displayName,
+                                    unit.abbreviation
+                                ),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         },
@@ -88,7 +102,7 @@ fun ServingUnitDropdown(
                             expanded = false
                         },
                         modifier = Modifier.semantics {
-                            contentDescription = "Select ${unit.displayName}"
+                            contentDescription = selectDescription
                         }
                     )
                 }
@@ -115,6 +129,10 @@ fun ServingUnitDropdownCompact(
     enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val compactDescription = stringResource(
+        R.string.serving_unit_compact_description,
+        selectedUnit.displayName
+    )
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -130,7 +148,7 @@ fun ServingUnitDropdownCompact(
             modifier = Modifier
                 .menuAnchor()
                 .semantics {
-                    contentDescription = "Serving unit: ${selectedUnit.displayName}. Tap to change."
+                    contentDescription = compactDescription
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -147,7 +165,11 @@ fun ServingUnitDropdownCompact(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = "${unit.displayName} (${unit.abbreviation})",
+                            text = stringResource(
+                                R.string.serving_unit_option,
+                                unit.displayName,
+                                unit.abbreviation
+                            ),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     },

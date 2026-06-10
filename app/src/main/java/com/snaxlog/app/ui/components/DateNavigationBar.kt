@@ -32,12 +32,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 import com.snaxlog.app.ui.theme.Spacing
 import java.time.LocalDate
@@ -77,6 +80,7 @@ fun DateNavigationBar(
     val canNavigateForward = selectedDate < today
 
     val customColors = SnaxlogThemeExtras.customColors
+    val context = LocalContext.current
 
     // Animate date text color based on viewing today or historical
     val dateColor by animateColorAsState(
@@ -97,17 +101,23 @@ fun DateNavigationBar(
     )
 
     // Format date display
-    val dateDisplayText = formatDateDisplay(selectedDate, isViewingToday)
+    val dateDisplayText = formatDateDisplay(context, selectedDate, isViewingToday)
 
     // Build accessibility descriptions
-    val previousDayDescription = "Previous day, ${formatDateForAccessibility(selectedDate.minusDays(1))}"
+    val previousDayDescription = stringResource(
+        R.string.date_nav_previous_day,
+        formatDateForAccessibility(selectedDate.minusDays(1))
+    )
     val nextDayDescription = if (canNavigateForward) {
-        "Next day, ${formatDateForAccessibility(selectedDate.plusDays(1))}"
+        stringResource(
+            R.string.date_nav_next_day,
+            formatDateForAccessibility(selectedDate.plusDays(1))
+        )
     } else {
-        "Cannot navigate forward, already viewing today"
+        stringResource(R.string.date_nav_cannot_navigate_forward)
     }
-    val dateAreaDescription = "Open calendar picker. Currently viewing $dateDisplayText"
-    val navigationBarDescription = "Date navigation. Currently viewing $dateDisplayText. Tap date to open calendar, use arrows to navigate."
+    val dateAreaDescription = stringResource(R.string.date_nav_open_calendar, dateDisplayText)
+    val navigationBarDescription = stringResource(R.string.date_nav_bar_description, dateDisplayText)
 
     Surface(
         modifier = modifier
@@ -193,14 +203,15 @@ fun DateNavigationBar(
                 exit = fadeOut(animationSpec = tween(200)) +
                        slideOutHorizontally(animationSpec = tween(200)) { it }
             ) {
+                val returnToTodayDescription = stringResource(R.string.date_nav_return_to_today)
                 TextButton(
                     onClick = { onDateChange(today) },
                     modifier = Modifier
                         .padding(start = Spacing.sm)
-                        .semantics { contentDescription = "Return to today" }
+                        .semantics { contentDescription = returnToTodayDescription }
                 ) {
                     Text(
-                        text = "Today",
+                        text = stringResource(R.string.date_nav_today),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -222,12 +233,12 @@ fun DateNavigationBar(
  * @param isToday Whether the date is today
  * @return Formatted date string
  */
-private fun formatDateDisplay(date: LocalDate, isToday: Boolean): String {
+private fun formatDateDisplay(context: android.content.Context, date: LocalDate, isToday: Boolean): String {
     val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
     val formattedDate = date.format(formatter)
 
     return if (isToday) {
-        "Today, ${formattedDate.substringAfter(", ")}"
+        context.getString(R.string.date_nav_today_prefix, formattedDate.substringAfter(", "))
     } else {
         formattedDate
     }

@@ -34,12 +34,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.components.CalorieCalculator
 import com.snaxlog.app.ui.components.MacroInputField
 import com.snaxlog.app.ui.components.MacroType
@@ -98,14 +100,18 @@ fun CreateCustomFoodScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (formState.isEditMode) "Edit Custom Food" else "Create Custom Food"
+                        text = if (formState.isEditMode) {
+                            stringResource(R.string.create_food_title_edit)
+                        } else {
+                            stringResource(R.string.create_food_title_create)
+                        }
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
+                            contentDescription = stringResource(R.string.common_navigate_back)
                         )
                     }
                 },
@@ -136,11 +142,12 @@ fun CreateCustomFoodScreen(
             ) {
                 // Food Name Input
                 // AC-013-001: Food name is required
+                val nameInputDescription = stringResource(R.string.create_food_name_input_description)
                 OutlinedTextField(
                     value = formState.nameInput,
                     onValueChange = { viewModel.updateName(it) },
-                    label = { Text("Food Name") },
-                    placeholder = { Text("e.g., Homemade Granola") },
+                    label = { Text(stringResource(R.string.create_food_name_label)) },
+                    placeholder = { Text(stringResource(R.string.create_food_name_placeholder)) },
                     isError = formState.nameError != null,
                     supportingText = formState.nameError?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
@@ -149,7 +156,7 @@ fun CreateCustomFoodScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics {
-                            contentDescription = "Food name input"
+                            contentDescription = nameInputDescription
                             formState.nameError?.let { error(it) }
                         }
                 )
@@ -169,7 +176,7 @@ fun CreateCustomFoodScreen(
                             modifier = Modifier.padding(end = Spacing.xs)
                         )
                         Text(
-                            text = "A food with this name already exists",
+                            text = stringResource(R.string.create_food_duplicate_warning),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -180,7 +187,7 @@ fun CreateCustomFoodScreen(
 
                 // Serving Size Section
                 Text(
-                    text = "Serving Size",
+                    text = stringResource(R.string.create_food_serving_size),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -193,11 +200,12 @@ fun CreateCustomFoodScreen(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     // Serving size value
+                    val servingAmountDescription = stringResource(R.string.create_food_serving_amount_description)
                     OutlinedTextField(
                         value = formState.servingSizeInput,
                         onValueChange = { viewModel.updateServingSize(it) },
-                        label = { Text("Amount") },
-                        placeholder = { Text("100") },
+                        label = { Text(stringResource(R.string.create_food_amount_label)) },
+                        placeholder = { Text(stringResource(R.string.create_food_amount_placeholder)) },
                         isError = formState.servingSizeError != null,
                         supportingText = formState.servingSizeError?.let { error ->
                             { Text(error, color = MaterialTheme.colorScheme.error) }
@@ -206,7 +214,7 @@ fun CreateCustomFoodScreen(
                         modifier = Modifier
                             .weight(1f)
                             .semantics {
-                                contentDescription = "Serving size amount"
+                                contentDescription = servingAmountDescription
                                 formState.servingSizeError?.let { error(it) }
                             }
                     )
@@ -223,7 +231,7 @@ fun CreateCustomFoodScreen(
 
                 // Macro Nutrients Section
                 Text(
-                    text = "Nutritional Information (per serving)",
+                    text = stringResource(R.string.create_food_nutrition_section),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -277,7 +285,7 @@ fun CreateCustomFoodScreen(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.create_food_cancel))
                     }
                     Spacer(modifier = Modifier.width(Spacing.sm))
                     Button(
@@ -293,7 +301,13 @@ fun CreateCustomFoodScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(if (formState.isEditMode) "Save Changes" else "Create Food")
+                            Text(
+                                if (formState.isEditMode) {
+                                    stringResource(R.string.create_food_save_changes)
+                                } else {
+                                    stringResource(R.string.create_food_create)
+                                }
+                            )
                         }
                     }
                 }

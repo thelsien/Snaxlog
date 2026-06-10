@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -30,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.theme.BreakfastDark
 import com.snaxlog.app.ui.theme.BreakfastLight
@@ -74,15 +77,22 @@ fun MealCategoryHeader(
 ) {
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val config = remember(category, isDarkTheme) { getCategoryHeaderConfig(category, isDarkTheme) }
+    val context = LocalContext.current
 
+    val label = stringResource(config.labelRes)
     val contentDescriptionText = buildContentDescription(
-        config.label,
+        context,
+        label,
         entryCount,
         totalCalories,
         totalProtein,
         totalFat,
         totalCarbs
     )
+    val collapsedText = stringResource(R.string.meal_header_collapsed)
+    val expandedText = stringResource(R.string.meal_header_expanded)
+    val entryCountText = formatEntryCount(context, entryCount)
+    val nutritionSummaryText = formatNutritionSummary(context, totalCalories, totalProtein, totalFat, totalCarbs)
 
     Surface(
         modifier = modifier
@@ -98,7 +108,7 @@ fun MealCategoryHeader(
                 role = Role.Tab
                 contentDescription = contentDescriptionText
                 if (onToggleCollapse != null) {
-                    stateDescription = if (isCollapsed) "Collapsed" else "Expanded"
+                    stateDescription = if (isCollapsed) collapsedText else expandedText
                 }
             },
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -125,13 +135,13 @@ fun MealCategoryHeader(
                 )
 
                 Text(
-                    text = config.label,
+                    text = label,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = formatEntryCount(entryCount),
+                    text = entryCountText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -139,7 +149,7 @@ fun MealCategoryHeader(
 
             // Right section: Nutrition Summary
             Text(
-                text = formatNutritionSummary(totalCalories, totalProtein, totalFat, totalCarbs),
+                text = nutritionSummaryText,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -153,7 +163,7 @@ fun MealCategoryHeader(
  * Configuration for a category header.
  */
 private data class CategoryHeaderConfig(
-    val label: String,
+    val labelRes: Int,
     val icon: ImageVector,
     val color: Color
 )
@@ -164,27 +174,27 @@ private data class CategoryHeaderConfig(
 private fun getCategoryHeaderConfig(category: MealCategory?, isDarkTheme: Boolean): CategoryHeaderConfig {
     return when (category) {
         MealCategory.BREAKFAST -> CategoryHeaderConfig(
-            label = "Breakfast",
+            labelRes = R.string.meal_category_breakfast,
             icon = Icons.Outlined.WbSunny,
             color = if (isDarkTheme) BreakfastDark else BreakfastLight
         )
         MealCategory.LUNCH -> CategoryHeaderConfig(
-            label = "Lunch",
+            labelRes = R.string.meal_category_lunch,
             icon = Icons.Outlined.LightMode,
             color = if (isDarkTheme) LunchDark else LunchLight
         )
         MealCategory.DINNER -> CategoryHeaderConfig(
-            label = "Dinner",
+            labelRes = R.string.meal_category_dinner,
             icon = Icons.Outlined.DarkMode,
             color = if (isDarkTheme) DinnerDark else DinnerLight
         )
         MealCategory.SNACKING -> CategoryHeaderConfig(
-            label = "Snacking",
+            labelRes = R.string.meal_category_snacking,
             icon = Icons.Outlined.NightsStay,
             color = if (isDarkTheme) SnackingDark else SnackingLight
         )
         null -> CategoryHeaderConfig(
-            label = "Uncategorized",
+            labelRes = R.string.meal_category_uncategorized,
             icon = Icons.Outlined.MoreHoriz,
             color = if (isDarkTheme) UncategorizedDark else UncategorizedLight
         )
@@ -194,14 +204,15 @@ private fun getCategoryHeaderConfig(category: MealCategory?, isDarkTheme: Boolea
 /**
  * Formats the entry count with proper singular/plural.
  */
-private fun formatEntryCount(count: Int): String {
-    return "($count item${if (count != 1) "s" else ""})"
+private fun formatEntryCount(context: android.content.Context, count: Int): String {
+    return context.getString(R.string.meal_header_count, count, if (count != 1) "s" else "")
 }
 
 /**
  * Formats the nutrition summary string.
  */
 private fun formatNutritionSummary(
+    context: android.content.Context,
     calories: Int,
     protein: Double,
     fat: Double,
@@ -210,13 +221,14 @@ private fun formatNutritionSummary(
     val proteinInt = protein.toInt()
     val fatInt = fat.toInt()
     val carbsInt = carbs.toInt()
-    return "$calories cal | P: ${proteinInt}g F: ${fatInt}g C: ${carbsInt}g"
+    return context.getString(R.string.meal_header_nutrition, calories, proteinInt, fatInt, carbsInt)
 }
 
 /**
  * Builds the accessibility content description for the header.
  */
 private fun buildContentDescription(
+    context: android.content.Context,
     categoryLabel: String,
     entryCount: Int,
     totalCalories: Int,
@@ -224,9 +236,21 @@ private fun buildContentDescription(
     totalFat: Double,
     totalCarbs: Double
 ): String {
-    val items = if (entryCount == 1) "item" else "items"
-    return "$categoryLabel category, $entryCount $items, $totalCalories calories, " +
-            "protein ${totalProtein.toInt()} grams, fat ${totalFat.toInt()} grams, carbs ${totalCarbs.toInt()} grams"
+    val items = if (entryCount == 1) {
+        context.getString(R.string.meal_header_item)
+    } else {
+        context.getString(R.string.meal_header_items)
+    }
+    return context.getString(
+        R.string.meal_header_description,
+        categoryLabel,
+        entryCount,
+        items,
+        totalCalories,
+        totalProtein.toInt(),
+        totalFat.toInt(),
+        totalCarbs.toInt()
+    )
 }
 
 /**

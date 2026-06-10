@@ -22,9 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 
 enum class MacroType {
@@ -56,16 +58,16 @@ fun MacroIndicator(
     val customColors = SnaxlogThemeExtras.customColors
 
     val (icon, macroColor, label) = when (type) {
-        MacroType.PROTEIN -> Triple(Icons.Filled.FitnessCenter, customColors.protein, "Protein")
-        MacroType.FAT -> Triple(Icons.Filled.Opacity, customColors.fat, "Fat")
-        MacroType.CARBS -> Triple(Icons.Filled.Grain, customColors.carbs, "Carbs")
+        MacroType.PROTEIN -> Triple(Icons.Filled.FitnessCenter, customColors.protein, stringResource(R.string.macro_protein))
+        MacroType.FAT -> Triple(Icons.Filled.Opacity, customColors.fat, stringResource(R.string.macro_fat))
+        MacroType.CARBS -> Triple(Icons.Filled.Grain, customColors.carbs, stringResource(R.string.macro_carbs))
     }
 
     val valueText = formatMacroValue(value)
     val displayText = if (goal != null && goal > 0) {
-        "${valueText}g / ${formatMacroValue(goal)}g"
+        stringResource(R.string.macro_value_with_goal, valueText, formatMacroValue(goal))
     } else {
-        "${valueText}g"
+        stringResource(R.string.macro_value, valueText)
     }
 
     // Calculate progress for macro when goal is set
@@ -77,9 +79,9 @@ fun MacroIndicator(
 
     val description = if (macroProgress != null) {
         val percentage = (macroProgress * 100).toInt().coerceAtLeast(0)
-        "$label: $displayText ($percentage% of goal)"
+        stringResource(R.string.macro_description_with_goal, label, displayText, percentage)
     } else {
-        "$label: $displayText"
+        stringResource(R.string.macro_description, label, displayText)
     }
 
     Column(
