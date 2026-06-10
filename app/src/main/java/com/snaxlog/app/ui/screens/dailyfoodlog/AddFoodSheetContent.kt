@@ -63,7 +63,7 @@ import java.util.Locale
  */
 @Composable
 fun AddFoodSheetContent(
-    viewModel: DailyFoodLogViewModel,
+    viewModel: AddFoodViewModel,
     onDismiss: () -> Unit
 ) {
     val state by viewModel.addFoodState.collectAsStateWithLifecycle()

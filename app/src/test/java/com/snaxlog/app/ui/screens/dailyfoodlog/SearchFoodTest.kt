@@ -1,9 +1,6 @@
 package com.snaxlog.app.ui.screens.dailyfoodlog
 
-import androidx.lifecycle.SavedStateHandle
 import com.snaxlog.app.data.local.entity.FoodEntity
-import com.snaxlog.app.data.local.entity.FoodIntakeWithFood
-import com.snaxlog.app.data.repository.CalorieGoalRepository
 import com.snaxlog.app.data.repository.FoodIntakeRepository
 import com.snaxlog.app.data.repository.FoodRepository
 import io.mockk.every
@@ -11,7 +8,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -29,6 +25,8 @@ import java.time.Clock
 /**
  * Focused tests for US-005: Search food database.
  * Covers AC-020 through AC-024 and related edge cases.
+ *
+ * Search/add-food behaviour now lives in [AddFoodViewModel] after the DailyFoodLogViewModel split.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchFoodTest {
@@ -36,8 +34,7 @@ class SearchFoodTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var foodIntakeRepository: FoodIntakeRepository
     private lateinit var foodRepository: FoodRepository
-    private lateinit var calorieGoalRepository: CalorieGoalRepository
-    private lateinit var viewModel: DailyFoodLogViewModel
+    private lateinit var viewModel: AddFoodViewModel
 
     private val apple = FoodEntity(
         id = 1, name = "Apple", category = "Fruits",
@@ -67,10 +64,7 @@ class SearchFoodTest {
         Dispatchers.setMain(testDispatcher)
         foodIntakeRepository = mockk(relaxed = true)
         foodRepository = mockk(relaxed = true)
-        calorieGoalRepository = mockk(relaxed = true)
 
-        every { foodIntakeRepository.getEntriesForDate(any()) } returns flowOf(emptyList())
-        every { calorieGoalRepository.getActiveGoal() } returns flowOf(null)
         every { foodRepository.getAllFoods() } returns flowOf(allFoods)
         every { foodRepository.searchFoods("apple") } returns flowOf(listOf(apple))
         every { foodRepository.searchFoods("chick") } returns flowOf(listOf(chicken))
@@ -78,7 +72,7 @@ class SearchFoodTest {
         every { foodRepository.searchFoods("pizza") } returns flowOf(emptyList())
         every { foodRepository.searchFoods("!@#\$%") } returns flowOf(emptyList())
 
-        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle(), Clock.systemDefaultZone())
+        viewModel = AddFoodViewModel(foodIntakeRepository, foodRepository, Clock.systemDefaultZone())
     }
 
     @After

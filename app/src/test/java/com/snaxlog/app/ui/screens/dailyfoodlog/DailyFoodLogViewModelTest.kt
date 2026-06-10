@@ -42,6 +42,8 @@ class DailyFoodLogViewModelTest {
     private lateinit var calorieGoalRepository: CalorieGoalRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: DailyFoodLogViewModel
+    private lateinit var addFoodViewModel: AddFoodViewModel
+    private lateinit var editFoodViewModel: EditFoodViewModel
 
     private val testFood = FoodEntity(
         id = 1, name = "Apple", category = "Fruits",
@@ -92,9 +94,17 @@ class DailyFoodLogViewModelTest {
 
         viewModel = DailyFoodLogViewModel(
             foodIntakeRepository = foodIntakeRepository,
-            foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
             savedStateHandle = savedStateHandle,
+            clock = Clock.systemDefaultZone()
+        )
+        addFoodViewModel = AddFoodViewModel(
+            foodIntakeRepository = foodIntakeRepository,
+            foodRepository = foodRepository,
+            clock = Clock.systemDefaultZone()
+        )
+        editFoodViewModel = EditFoodViewModel(
+            foodIntakeRepository = foodIntakeRepository,
             clock = Clock.systemDefaultZone()
         )
     }
@@ -209,10 +219,10 @@ class DailyFoodLogViewModelTest {
 
     @Test
     fun `AC-006 - openAddFood initializes add food state`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertEquals("", state.searchQuery)
         assertNull(state.selectedFood)
         assertEquals("1.0", state.servingsInput)
@@ -220,10 +230,10 @@ class DailyFoodLogViewModelTest {
 
     @Test
     fun `AC-007 - search shows food name, serving size, and calories`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertTrue(state.foods.isNotEmpty())
         val food = state.foods.find { it.name == "Apple" }
         assertNotNull(food)
@@ -233,12 +243,12 @@ class DailyFoodLogViewModelTest {
 
     @Test
     fun `AC-008 - selecting food allows specifying servings with default 1_0`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        viewModel.selectFood(testFood)
+        addFoodViewModel.selectFood(testFood)
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertNotNull(state.selectedFood)
         assertEquals("1.0", state.servingsInput)
     }
@@ -246,12 +256,12 @@ class DailyFoodLogViewModelTest {
     @Test
     fun `AC-009 - saving entry creates food intake with calculated values`() = runTest {
         coEvery { foodIntakeRepository.addEntry(any()) } returns 1L
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        viewModel.selectFood(testFood)
-        viewModel.updateAddFoodServings("2.0")
-        viewModel.saveAddFood()
+        addFoodViewModel.selectFood(testFood)
+        addFoodViewModel.updateAddFoodServings("2.0")
+        addFoodViewModel.saveAddFood()
         advanceUntilIdle()
 
         coVerify {
@@ -267,80 +277,81 @@ class DailyFoodLogViewModelTest {
     }
 
     @Test
-    fun `AC-010 - after adding entry snackbar message is set`() = runTest {
+    fun `AC-010 - after adding entry saveSuccess signal is set`() = runTest {
         coEvery { foodIntakeRepository.addEntry(any()) } returns 1L
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        viewModel.selectFood(testFood)
-        viewModel.saveAddFood()
+        addFoodViewModel.selectFood(testFood)
+        addFoodViewModel.saveAddFood()
         advanceUntilIdle()
 
-        assertEquals("Entry added", viewModel.uiState.value.snackbarMessage)
+        // The screen consumes saveSuccess to show the "Entry added" snackbar.
+        assertTrue(addFoodViewModel.addFoodState.value.saveSuccess)
     }
 
     @Test
     fun `EC-011 - zero servings shows validation error`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
-        viewModel.selectFood(testFood)
+        addFoodViewModel.selectFood(testFood)
 
-        viewModel.updateAddFoodServings("0")
+        addFoodViewModel.updateAddFoodServings("0")
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertEquals("Serving size must be greater than 0", state.servingsError)
     }
 
     @Test
     fun `EC-012 - negative servings shows validation error`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
-        viewModel.selectFood(testFood)
+        addFoodViewModel.selectFood(testFood)
 
-        viewModel.updateAddFoodServings("-1")
+        addFoodViewModel.updateAddFoodServings("-1")
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertEquals("Serving size must be greater than 0", state.servingsError)
     }
 
     @Test
     fun `EC-014 - decimal servings accepted up to 2 decimal places`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
-        viewModel.selectFood(testFood)
+        addFoodViewModel.selectFood(testFood)
 
-        viewModel.updateAddFoodServings("1.5")
-        assertNull(viewModel.addFoodState.value.servingsError)
+        addFoodViewModel.updateAddFoodServings("1.5")
+        assertNull(addFoodViewModel.addFoodState.value.servingsError)
 
-        viewModel.updateAddFoodServings("1.55")
-        assertNull(viewModel.addFoodState.value.servingsError)
+        addFoodViewModel.updateAddFoodServings("1.55")
+        assertNull(addFoodViewModel.addFoodState.value.servingsError)
 
-        viewModel.updateAddFoodServings("1.555")
-        assertNotNull(viewModel.addFoodState.value.servingsError)
+        addFoodViewModel.updateAddFoodServings("1.555")
+        assertNotNull(addFoodViewModel.addFoodState.value.servingsError)
     }
 
     @Test
     fun `EC-015 - non-numeric input shows validation error`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
-        viewModel.selectFood(testFood)
+        addFoodViewModel.selectFood(testFood)
 
-        viewModel.updateAddFoodServings("abc")
+        addFoodViewModel.updateAddFoodServings("abc")
 
-        assertEquals("Please enter a valid number", viewModel.addFoodState.value.servingsError)
+        assertEquals("Please enter a valid number", addFoodViewModel.addFoodState.value.servingsError)
     }
 
     @Test
     fun `EC-020 - double save is prevented by isSaving flag`() = runTest {
         coEvery { foodIntakeRepository.addEntry(any()) } returns 1L
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
-        viewModel.selectFood(testFood)
+        addFoodViewModel.selectFood(testFood)
 
         // First save triggers
-        viewModel.saveAddFood()
+        addFoodViewModel.saveAddFood()
         // Second save should be ignored due to isSaving
-        viewModel.saveAddFood()
+        addFoodViewModel.saveAddFood()
         advanceUntilIdle()
 
         coVerify(exactly = 1) { foodIntakeRepository.addEntry(any()) }
@@ -354,10 +365,10 @@ class DailyFoodLogViewModelTest {
     fun `AC-012 - loading entry for edit pre-fills current values`() = runTest {
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns testEntryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        val state = viewModel.editFoodState.value
+        val state = editFoodViewModel.editFoodState.value
         assertNotNull(state.entry)
         assertEquals("Apple", state.entry!!.food.name)
         assertEquals("1.0", state.servingsInput)
@@ -368,12 +379,12 @@ class DailyFoodLogViewModelTest {
     fun `AC-013 - changing serving size updates nutrition preview in real-time`() = runTest {
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns testEntryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        viewModel.updateEditFoodServings("2.0")
+        editFoodViewModel.updateEditFoodServings("2.0")
 
-        val state = viewModel.editFoodState.value
+        val state = editFoodViewModel.editFoodState.value
         assertEquals(190, state.previewCalories)
         assertEquals(1.0, state.previewProtein, 0.01)
         assertEquals(0.6, state.previewFat, 0.01)
@@ -384,11 +395,11 @@ class DailyFoodLogViewModelTest {
     fun `AC-014 - saving edited entry updates it in repository`() = runTest {
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns testEntryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        viewModel.updateEditFoodServings("3.0")
-        viewModel.saveEditFood()
+        editFoodViewModel.updateEditFoodServings("3.0")
+        editFoodViewModel.saveEditFood()
         advanceUntilIdle()
 
         coVerify {
@@ -404,10 +415,10 @@ class DailyFoodLogViewModelTest {
     fun `AC-015 - cancel editing does not save changes (no update call)`() = runTest {
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns testEntryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        viewModel.updateEditFoodServings("5.0")
+        editFoodViewModel.updateEditFoodServings("5.0")
         // Don't call saveEditFood - simulating cancel
 
         coVerify(exactly = 0) { foodIntakeRepository.updateEntry(any()) }
@@ -417,10 +428,10 @@ class DailyFoodLogViewModelTest {
     fun `EC-024 - entry deleted while editing shows error`() = runTest {
         coEvery { foodIntakeRepository.getEntryWithFoodById(999L) } returns null
 
-        viewModel.loadEntryForEdit(999L)
+        editFoodViewModel.loadEntryForEdit(999L)
         advanceUntilIdle()
 
-        val state = viewModel.editFoodState.value
+        val state = editFoodViewModel.editFoodState.value
         assertEquals("Entry no longer exists", state.error)
     }
 
@@ -428,12 +439,12 @@ class DailyFoodLogViewModelTest {
     fun `EC-023 - editing to zero servings shows validation error`() = runTest {
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns testEntryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        viewModel.updateEditFoodServings("0")
+        editFoodViewModel.updateEditFoodServings("0")
 
-        assertNotNull(viewModel.editFoodState.value.servingsError)
+        assertNotNull(editFoodViewModel.editFoodState.value.servingsError)
     }
 
     // ============================================================
@@ -497,45 +508,45 @@ class DailyFoodLogViewModelTest {
 
     @Test
     fun `AC-020 - typing in search filters food list in real-time`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        viewModel.updateSearchQuery("chick")
+        addFoodViewModel.updateSearchQuery("chick")
         advanceUntilIdle()
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertEquals("chick", state.searchQuery)
         // searchFoods mock returns testFood2 (Grilled Chicken Breast)
     }
 
     @Test
     fun `AC-024 - clearing search shows all foods`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        viewModel.updateSearchQuery("something")
-        viewModel.clearSearch()
+        addFoodViewModel.updateSearchQuery("something")
+        addFoodViewModel.clearSearch()
 
-        assertEquals("", viewModel.addFoodState.value.searchQuery)
+        assertEquals("", addFoodViewModel.addFoodState.value.searchQuery)
     }
 
     @Test
     fun `EC-040 - search input limited to 100 characters`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
         val longQuery = "a".repeat(200)
-        viewModel.updateSearchQuery(longQuery)
+        addFoodViewModel.updateSearchQuery(longQuery)
 
-        assertEquals(100, viewModel.addFoodState.value.searchQuery.length)
+        assertEquals(100, addFoodViewModel.addFoodState.value.searchQuery.length)
     }
 
     @Test
     fun `EC-039 - whitespace-only search treated as empty`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
 
-        viewModel.updateSearchQuery("   ")
+        addFoodViewModel.updateSearchQuery("   ")
         advanceUntilIdle()
 
         // The debounced query should be "   " but since it's blank,
@@ -548,26 +559,21 @@ class DailyFoodLogViewModelTest {
 
     @Test
     fun `nutrition preview calculates proportionally for decimal servings`() = runTest {
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood()
         advanceUntilIdle()
-        viewModel.selectFood(testFood) // Apple: 95cal, 0.5p, 0.3f, 25.1c per serving
+        addFoodViewModel.selectFood(testFood) // Apple: 95cal, 0.5p, 0.3f, 25.1c per serving
 
-        viewModel.updateAddFoodServings("0.5")
+        addFoodViewModel.updateAddFoodServings("0.5")
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertEquals(48, state.previewCalories) // 95 * 0.5 = 47.5, rounded to 48
         assertEquals(0.3, state.previewProtein, 0.01) // 0.5 * 0.5 = 0.25, rounded to 0.3
     }
 
     @Test
-    fun `clearSnackbar resets snackbar message`() = runTest {
-        coEvery { foodIntakeRepository.addEntry(any()) } returns 1L
-        viewModel.openAddFood()
-        advanceUntilIdle()
-        viewModel.selectFood(testFood)
-        viewModel.saveAddFood()
-        advanceUntilIdle()
-
+    fun `showSnackbar then clearSnackbar resets snackbar message`() = runTest {
+        // The screen forwards add/edit success to the daily log via showSnackbar.
+        viewModel.showSnackbar("Entry added")
         assertEquals("Entry added", viewModel.uiState.value.snackbarMessage)
 
         viewModel.clearSnackbar()
