@@ -31,6 +31,7 @@ import com.snaxlog.app.ui.theme.ProteinDark
 import com.snaxlog.app.ui.theme.ProteinLight
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
+import kotlin.math.roundToInt
 
 /**
  * C-032: RecipeNutritionSummary
@@ -62,7 +63,7 @@ fun RecipeNutritionSummary(
     val numberFormat = NumberFormat.getNumberInstance()
 
     // Calculate per-serving values
-    val perServingCalories = if (numberOfServings > 0) (totalCalories / numberOfServings).toInt() else 0
+    val perServingCalories = if (numberOfServings > 0) (totalCalories / numberOfServings).roundToInt() else 0
     val perServingProtein = if (numberOfServings > 0) totalProtein / numberOfServings else 0.0
     val perServingFat = if (numberOfServings > 0) totalFat / numberOfServings else 0.0
     val perServingCarbs = if (numberOfServings > 0) totalCarbs / numberOfServings else 0.0

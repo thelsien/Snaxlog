@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlin.math.roundToInt
 
 /**
  * EPIC-006: User-Created Foods and Recipes
@@ -82,7 +83,7 @@ data class RecipeIngredientWithFood(
         val servingMultiplier = ingredient.quantity
 
         return IngredientNutrition(
-            calories = (f.caloriesPerServing * servingMultiplier).toInt(),
+            calories = (f.caloriesPerServing * servingMultiplier).roundToInt(),
             protein = f.proteinPerServing * servingMultiplier,
             fat = f.fatPerServing * servingMultiplier,
             carbs = f.carbsPerServing * servingMultiplier
@@ -162,7 +163,7 @@ data class RecipeNutrition(
      * Calories per serving, rounded to nearest integer.
      */
     val caloriesPerServing: Int
-        get() = if (numberOfServings > 0) (totalCalories / numberOfServings).toInt() else 0
+        get() = if (numberOfServings > 0) (totalCalories / numberOfServings).roundToInt() else 0
 
     /**
      * Protein per serving (2 decimal places precision).

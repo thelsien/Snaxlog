@@ -77,27 +77,27 @@ class FoodEntityTest {
         // Protein: 10.5g * 4 = 42 cal
         // Fat: 5.5g * 9 = 49.5 cal
         // Carbs: 20.5g * 4 = 82 cal
-        // Total = 173.5, truncated to 173
+        // Total = 173.5, rounded to 174
         val result = FoodEntity.calculateCalories(
             protein = 10.5,
             fat = 5.5,
             carbs = 20.5
         )
-        assertEquals(173, result)
+        assertEquals(174, result)
     }
 
     @Test
-    fun `calculateCalories rounds down fractional calories`() {
+    fun `calculateCalories rounds fractional calories to nearest integer`() {
         // Protein: 1g * 4 = 4 cal
         // Fat: 0.1g * 9 = 0.9 cal
         // Carbs: 0g * 4 = 0 cal
-        // Total = 4.9, truncated to 4
+        // Total = 4.9, rounded to 5
         val result = FoodEntity.calculateCalories(
             protein = 1.0,
             fat = 0.1,
             carbs = 0.0
         )
-        assertEquals(4, result)
+        assertEquals(5, result)
     }
 
     @Test

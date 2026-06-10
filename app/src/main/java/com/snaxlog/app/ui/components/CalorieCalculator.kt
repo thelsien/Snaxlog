@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
+import kotlin.math.roundToInt
 
 /**
  * C-029: CalorieCalculator
@@ -46,10 +48,12 @@ fun CalorieCalculator(
     modifier: Modifier = Modifier,
     showFormula: Boolean = true
 ) {
-    val proteinCalories = (protein * 4).toInt()
-    val fatCalories = (fat * 9).toInt()
-    val carbsCalories = (carbs * 4).toInt()
-    val totalCalories = proteinCalories + fatCalories + carbsCalories
+    val proteinCalories = (protein * 4).roundToInt()
+    val fatCalories = (fat * 9).roundToInt()
+    val carbsCalories = (carbs * 4).roundToInt()
+    // Round the exact total rather than summing rounded parts, so the
+    // displayed total always matches the value persisted on save
+    val totalCalories = FoodEntity.calculateCalories(protein, fat, carbs)
 
     val numberFormat = NumberFormat.getNumberInstance()
     val caloriesText = numberFormat.format(totalCalories)

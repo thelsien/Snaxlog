@@ -306,7 +306,7 @@ class FoodRepositoryImplTest {
         // Apple: 95 cal, 0.5p, 0.3f, 25.1c (1 serving)
         // Chicken x2: 330 cal, 62p, 7.2f, 0c (2 servings)
         // Total: 425 cal, 62.5p, 7.5f, 25.1c
-        // Per serving (2 servings): 212 cal, 31.25p, 3.75f, 12.55c
+        // Per serving (2 servings): 212.5 cal rounded to 213, 31.25p, 3.75f, 12.55c
         val ingredients = listOf(
             RecipeIngredientInput(foodId = 1L, quantity = 1.0, unit = ServingUnit.SERVING),
             RecipeIngredientInput(foodId = 2L, quantity = 2.0, unit = ServingUnit.SERVING)
@@ -318,7 +318,7 @@ class FoodRepositoryImplTest {
             ingredients = ingredients
         )
 
-        assertEquals(212, foodSlot.captured.caloriesPerServing)
+        assertEquals(213, foodSlot.captured.caloriesPerServing)
         assertEquals(31.25, foodSlot.captured.proteinPerServing, 0.01)
         assertEquals(3.75, foodSlot.captured.fatPerServing, 0.01)
         assertEquals(12.55, foodSlot.captured.carbsPerServing, 0.01)

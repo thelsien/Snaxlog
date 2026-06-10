@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.snaxlog.app.data.local.entity.ServingUnit
 import com.snaxlog.app.ui.theme.Spacing
 import java.text.NumberFormat
+import kotlin.math.roundToInt
 
 /**
  * Data class representing an ingredient in the recipe editor.
@@ -56,7 +57,7 @@ data class IngredientItem(
      * Calculate total calories for this ingredient quantity.
      */
     val totalCalories: Int
-        get() = (caloriesPerServing * quantity).toInt()
+        get() = (caloriesPerServing * quantity).roundToInt()
 
     /**
      * Calculate total protein for this ingredient quantity.

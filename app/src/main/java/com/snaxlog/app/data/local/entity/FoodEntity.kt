@@ -2,6 +2,7 @@ package com.snaxlog.app.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlin.math.roundToInt
 
 /**
  * Type of food in the database.
@@ -133,7 +134,7 @@ data class FoodEntity(
          * @return Calculated calories, rounded to nearest integer
          */
         fun calculateCalories(protein: Double, fat: Double, carbs: Double): Int {
-            return ((protein * 4) + (carbs * 4) + (fat * 9)).toInt()
+            return ((protein * 4) + (carbs * 4) + (fat * 9)).roundToInt()
         }
     }
 }

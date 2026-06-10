@@ -12,6 +12,7 @@ import com.snaxlog.app.data.local.entity.ServingUnit
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 /**
  * Implementation of FoodRepository.
@@ -103,7 +104,7 @@ class FoodRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
 
         // Calculate per-serving values
-        val caloriesPerServing = (nutrition.totalCalories / numberOfServings).toInt()
+        val caloriesPerServing = (nutrition.totalCalories / numberOfServings).roundToInt()
         val proteinPerServing = nutrition.totalProtein / numberOfServings
         val fatPerServing = nutrition.totalFat / numberOfServings
         val carbsPerServing = nutrition.totalCarbs / numberOfServings
@@ -206,7 +207,7 @@ class FoodRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
 
         // Calculate per-serving values
-        val caloriesPerServing = (nutrition.totalCalories / numberOfServings).toInt()
+        val caloriesPerServing = (nutrition.totalCalories / numberOfServings).roundToInt()
         val proteinPerServing = nutrition.totalProtein / numberOfServings
         val fatPerServing = nutrition.totalFat / numberOfServings
         val carbsPerServing = nutrition.totalCarbs / numberOfServings
@@ -319,7 +320,7 @@ class FoodRepositoryImpl @Inject constructor(
         val foodIds = ingredients.map { it.foodId }
         val foods = foodDao.getFoodsByIds(foodIds).associateBy { it.id }
 
-        var totalCalories = 0
+        var totalCalories = 0.0
         var totalProtein = 0.0
         var totalFat = 0.0
         var totalCarbs = 0.0
@@ -334,7 +335,7 @@ class FoodRepositoryImpl @Inject constructor(
             }
 
             val multiplier = ingredient.quantity
-            totalCalories += (food.caloriesPerServing * multiplier).toInt()
+            totalCalories += food.caloriesPerServing * multiplier
             totalProtein += food.proteinPerServing * multiplier
             totalFat += food.fatPerServing * multiplier
             totalCarbs += food.carbsPerServing * multiplier
@@ -344,7 +345,7 @@ class FoodRepositoryImpl @Inject constructor(
     }
 
     private data class RecipeNutritionTotals(
-        val totalCalories: Int,
+        val totalCalories: Double,
         val totalProtein: Double,
         val totalFat: Double,
         val totalCarbs: Double
