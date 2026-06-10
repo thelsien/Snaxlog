@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.ui.components.CalorieCalculator
 import com.snaxlog.app.ui.components.MacroInputField
 import com.snaxlog.app.ui.components.MacroType
@@ -87,10 +89,12 @@ fun CreateCustomFoodScreen(
         }
     }
 
+    val context = LocalContext.current
+
     // Handle errors
     LaunchedEffect(formState.error) {
         formState.error?.let { error ->
-            snackbarHostState.showSnackbar(error)
+            snackbarHostState.showSnackbar(error.asString(context))
             viewModel.clearError()
         }
     }
@@ -143,13 +147,14 @@ fun CreateCustomFoodScreen(
                 // Food Name Input
                 // AC-013-001: Food name is required
                 val nameInputDescription = stringResource(R.string.create_food_name_input_description)
+                val nameErrorText = formState.nameError?.asString()
                 OutlinedTextField(
                     value = formState.nameInput,
                     onValueChange = { viewModel.updateName(it) },
                     label = { Text(stringResource(R.string.create_food_name_label)) },
                     placeholder = { Text(stringResource(R.string.create_food_name_placeholder)) },
-                    isError = formState.nameError != null,
-                    supportingText = formState.nameError?.let { error ->
+                    isError = nameErrorText != null,
+                    supportingText = nameErrorText?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
                     },
                     singleLine = true,
@@ -157,7 +162,7 @@ fun CreateCustomFoodScreen(
                         .fillMaxWidth()
                         .semantics {
                             contentDescription = nameInputDescription
-                            formState.nameError?.let { error(it) }
+                            nameErrorText?.let { error(it) }
                         }
                 )
 
@@ -201,13 +206,14 @@ fun CreateCustomFoodScreen(
                 ) {
                     // Serving size value
                     val servingAmountDescription = stringResource(R.string.create_food_serving_amount_description)
+                    val servingSizeErrorText = formState.servingSizeError?.asString()
                     OutlinedTextField(
                         value = formState.servingSizeInput,
                         onValueChange = { viewModel.updateServingSize(it) },
                         label = { Text(stringResource(R.string.create_food_amount_label)) },
                         placeholder = { Text(stringResource(R.string.create_food_amount_placeholder)) },
-                        isError = formState.servingSizeError != null,
-                        supportingText = formState.servingSizeError?.let { error ->
+                        isError = servingSizeErrorText != null,
+                        supportingText = servingSizeErrorText?.let { error ->
                             { Text(error, color = MaterialTheme.colorScheme.error) }
                         },
                         singleLine = true,
@@ -215,7 +221,7 @@ fun CreateCustomFoodScreen(
                             .weight(1f)
                             .semantics {
                                 contentDescription = servingAmountDescription
-                                formState.servingSizeError?.let { error(it) }
+                                servingSizeErrorText?.let { error(it) }
                             }
                     )
 
@@ -243,7 +249,7 @@ fun CreateCustomFoodScreen(
                     value = formState.proteinInput,
                     onValueChange = { viewModel.updateProtein(it) },
                     macroType = MacroType.PROTEIN,
-                    errorMessage = formState.proteinError,
+                    errorMessage = formState.proteinError?.asString(),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -253,7 +259,7 @@ fun CreateCustomFoodScreen(
                     value = formState.fatInput,
                     onValueChange = { viewModel.updateFat(it) },
                     macroType = MacroType.FAT,
-                    errorMessage = formState.fatError,
+                    errorMessage = formState.fatError?.asString(),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -263,7 +269,7 @@ fun CreateCustomFoodScreen(
                     value = formState.carbsInput,
                     onValueChange = { viewModel.updateCarbs(it) },
                     macroType = MacroType.CARBS,
-                    errorMessage = formState.carbsError,
+                    errorMessage = formState.carbsError?.asString(),
                     modifier = Modifier.fillMaxWidth()
                 )
 

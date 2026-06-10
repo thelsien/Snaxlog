@@ -39,12 +39,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
+import com.snaxlog.app.ui.common.asString
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -100,23 +103,24 @@ fun DailyFoodLogScreen(
         }
     }
 
+    val context = LocalContext.current
+
     // Handle snackbar messages
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.asString(context))
             viewModel.clearSnackbar()
         }
     }
 
     // Add-food result: close the sheet and surface the "Entry added" snackbar on the main screen.
-    // The literal is kept in sync with the AddFoodViewModel/snackbar contract.
     LaunchedEffect(addFoodState.saveSuccess, addFoodState.saveError) {
         if (addFoodState.saveSuccess) {
             showAddFoodSheet = false
-            viewModel.showSnackbar("Entry added")
+            viewModel.showSnackbar(UiText.StringResource(R.string.daily_log_msg_entry_added))
             addFoodViewModel.onSaveHandled()
         } else if (addFoodState.saveError) {
-            viewModel.showError("Failed to save entry. Please try again.")
+            viewModel.showError(UiText.StringResource(R.string.daily_log_msg_save_failed))
             addFoodViewModel.onSaveHandled()
         }
     }
@@ -125,10 +129,10 @@ fun DailyFoodLogScreen(
     LaunchedEffect(editFoodState.saveSuccess, editFoodState.saveError) {
         if (editFoodState.saveSuccess) {
             showEditFoodSheet = false
-            viewModel.showSnackbar("Entry updated")
+            viewModel.showSnackbar(UiText.StringResource(R.string.daily_log_msg_entry_updated))
             editFoodViewModel.onSaveHandled()
         } else if (editFoodState.saveError) {
-            viewModel.showError("Failed to update entry. Please try again.")
+            viewModel.showError(UiText.StringResource(R.string.daily_log_msg_update_failed))
             editFoodViewModel.onSaveHandled()
         }
     }
@@ -228,7 +232,7 @@ fun DailyFoodLogScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.error ?: stringResource(R.string.common_unknown_error),
+                        text = uiState.error?.asString() ?: stringResource(R.string.common_unknown_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )

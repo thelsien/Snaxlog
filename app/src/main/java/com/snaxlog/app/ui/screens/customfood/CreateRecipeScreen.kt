@@ -50,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodTypeBadge
@@ -108,10 +110,12 @@ fun CreateRecipeScreen(
         }
     }
 
+    val context = LocalContext.current
+
     // Handle errors
     LaunchedEffect(formState.error) {
         formState.error?.let { error ->
-            snackbarHostState.showSnackbar(error)
+            snackbarHostState.showSnackbar(error.asString(context))
             viewModel.clearError()
         }
     }
@@ -162,13 +166,14 @@ fun CreateRecipeScreen(
             ) {
                 // Recipe Name Input
                 val recipeNameDescription = stringResource(R.string.create_recipe_name_input_description)
+                val nameErrorText = formState.nameError?.asString()
                 OutlinedTextField(
                     value = formState.nameInput,
                     onValueChange = { viewModel.updateName(it) },
                     label = { Text(stringResource(R.string.create_recipe_name_label)) },
                     placeholder = { Text(stringResource(R.string.create_recipe_name_placeholder)) },
-                    isError = formState.nameError != null,
-                    supportingText = formState.nameError?.let { error ->
+                    isError = nameErrorText != null,
+                    supportingText = nameErrorText?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
                     },
                     singleLine = true,
@@ -176,7 +181,7 @@ fun CreateRecipeScreen(
                         .fillMaxWidth()
                         .semantics {
                             contentDescription = recipeNameDescription
-                            formState.nameError?.let { error(it) }
+                            nameErrorText?.let { error(it) }
                         }
                 )
 
@@ -206,13 +211,14 @@ fun CreateRecipeScreen(
 
                 // Number of Servings Input
                 val servingsDescription = stringResource(R.string.create_recipe_servings_description)
+                val servingsErrorText = formState.numberOfServingsError?.asString()
                 OutlinedTextField(
                     value = formState.numberOfServingsInput,
                     onValueChange = { viewModel.updateNumberOfServings(it) },
                     label = { Text(stringResource(R.string.create_recipe_servings_label)) },
                     placeholder = { Text(stringResource(R.string.create_recipe_servings_placeholder)) },
-                    isError = formState.numberOfServingsError != null,
-                    supportingText = formState.numberOfServingsError?.let { error ->
+                    isError = servingsErrorText != null,
+                    supportingText = servingsErrorText?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
                     },
                     singleLine = true,
@@ -221,7 +227,7 @@ fun CreateRecipeScreen(
                         .fillMaxWidth()
                         .semantics {
                             contentDescription = servingsDescription
-                            formState.numberOfServingsError?.let { error(it) }
+                            servingsErrorText?.let { error(it) }
                         }
                 )
 
@@ -251,9 +257,9 @@ fun CreateRecipeScreen(
                 }
 
                 // Ingredients error
-                if (formState.ingredientsError != null) {
+                formState.ingredientsError?.let { ingredientsError ->
                     Text(
-                        text = formState.ingredientsError!!,
+                        text = ingredientsError.asString(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = Spacing.xs)

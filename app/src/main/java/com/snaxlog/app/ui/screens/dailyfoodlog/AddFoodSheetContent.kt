@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.data.local.entity.FoodEntity
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodTypeBadge
 import com.snaxlog.app.ui.components.MealCategorySelector
@@ -253,7 +254,7 @@ fun AddFoodSheetContent(
                 label = { Text(stringResource(R.string.add_food_servings_label)) },
                 isError = state.servingsError != null,
                 supportingText = state.servingsError?.let { error ->
-                    { Text(error, color = MaterialTheme.colorScheme.error) }
+                    { Text(error.asString(), color = MaterialTheme.colorScheme.error) }
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true

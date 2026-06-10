@@ -31,11 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.ui.components.DeleteConfirmationDialog
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.GoalCard
@@ -60,13 +63,16 @@ fun GoalManagementScreen(
     var showGoalFormSheet by remember { mutableStateOf(false) }
     val goalFormSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    val context = LocalContext.current
+
     // Handle snackbar messages
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.asString(context))
             viewModel.clearSnackbar()
 
-            if (message == "Goal saved") {
+            // Close the form sheet once the "Goal saved" message is surfaced.
+            if (message is UiText.StringResource && message.resId == R.string.goal_msg_saved) {
                 showGoalFormSheet = false
             }
         }
@@ -136,7 +142,7 @@ fun GoalManagementScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.error ?: stringResource(R.string.common_unknown_error),
+                        text = uiState.error?.asString() ?: stringResource(R.string.common_unknown_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )

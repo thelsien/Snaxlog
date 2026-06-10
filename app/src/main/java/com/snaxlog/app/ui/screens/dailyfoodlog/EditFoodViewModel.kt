@@ -2,9 +2,11 @@ package com.snaxlog.app.ui.screens.dailyfoodlog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.FoodIntakeWithFood
 import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.data.repository.FoodIntakeRepository
+import com.snaxlog.app.ui.common.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,14 +31,14 @@ import kotlin.math.roundToInt
 data class EditFoodUiState(
     val entry: FoodIntakeWithFood? = null,
     val servingsInput: String = "1.0",
-    val servingsError: String? = null,
+    val servingsError: UiText? = null,
     val previewCalories: Int = 0,
     val previewProtein: Double = 0.0,
     val previewFat: Double = 0.0,
     val previewCarbs: Double = 0.0,
     val isSaving: Boolean = false,
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: UiText? = null,
     // FIP-005: Meal category field (no auto-selection in edit mode)
     val selectedCategory: MealCategory? = null,
     // FIP-EPIC-005: Entry date for context display
@@ -102,12 +104,12 @@ class EditFoodViewModel @Inject constructor(
                 } else {
                     // EC-024: Entry was deleted while user is trying to edit
                     _editFoodState.update {
-                        it.copy(isLoading = false, error = "Entry no longer exists")
+                        it.copy(isLoading = false, error = UiText.StringResource(R.string.food_entry_error_entry_missing))
                     }
                 }
             } catch (e: Exception) {
                 _editFoodState.update {
-                    it.copy(isLoading = false, error = "Failed to load entry")
+                    it.copy(isLoading = false, error = UiText.StringResource(R.string.food_entry_error_load_failed))
                 }
             }
         }
@@ -183,17 +185,17 @@ class EditFoodViewModel @Inject constructor(
     // Validation (EC-011..EC-015, EC-023)
     // ============================
 
-    private fun validateServings(input: String): String? {
-        if (input.isBlank()) return "Serving size is required"
+    private fun validateServings(input: String): UiText? {
+        if (input.isBlank()) return UiText.StringResource(R.string.food_entry_error_serving_required)
 
         val servings = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
+            ?: return UiText.StringResource(R.string.food_entry_error_invalid_number)
 
-        if (servings <= 0) return "Serving size must be greater than 0"
+        if (servings <= 0) return UiText.StringResource(R.string.food_entry_error_serving_positive)
 
         // EC-014: Check decimal places
         if (input.contains(".") && input.substringAfter(".").length > 2) {
-            return "Maximum 2 decimal places"
+            return UiText.StringResource(R.string.food_entry_error_max_decimals)
         }
 
         return null

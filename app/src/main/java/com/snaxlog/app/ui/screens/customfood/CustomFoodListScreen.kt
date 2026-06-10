@@ -56,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodType
 import com.snaxlog.app.ui.components.EmptyStateView
@@ -101,10 +103,12 @@ fun CustomFoodListScreen(
     val numberFormat = NumberFormat.getNumberInstance()
     var isFabExpanded by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+
     // Handle snackbar messages
     LaunchedEffect(listState.snackbarMessage) {
         listState.snackbarMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+            snackbarHostState.showSnackbar(message.asString(context))
             viewModel.clearSnackbar()
         }
     }
@@ -112,7 +116,7 @@ fun CustomFoodListScreen(
     // Handle errors
     LaunchedEffect(listState.error) {
         listState.error?.let { error ->
-            snackbarHostState.showSnackbar(error)
+            snackbarHostState.showSnackbar(error.asString(context))
             viewModel.clearError()
         }
     }
@@ -236,7 +240,7 @@ fun CustomFoodListScreen(
     listState.deleteDialogFood?.let { food ->
         DeleteCustomFoodDialog(
             food = food,
-            warningMessage = listState.deleteWarningMessage,
+            warningMessage = listState.deleteWarningMessage?.asString(),
             onConfirm = { viewModel.confirmDeleteFood() },
             onDismiss = { viewModel.dismissDeleteDialog() }
         )

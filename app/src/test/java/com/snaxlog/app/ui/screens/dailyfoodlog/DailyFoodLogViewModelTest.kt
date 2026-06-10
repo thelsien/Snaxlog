@@ -2,6 +2,8 @@ package com.snaxlog.app.ui.screens.dailyfoodlog
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
+import com.snaxlog.app.R
+import com.snaxlog.app.ui.common.UiText
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
@@ -299,7 +301,10 @@ class DailyFoodLogViewModelTest {
         addFoodViewModel.updateAddFoodServings("0")
 
         val state = addFoodViewModel.addFoodState.value
-        assertEquals("Serving size must be greater than 0", state.servingsError)
+        assertEquals(
+            UiText.StringResource(R.string.food_entry_error_serving_positive),
+            state.servingsError
+        )
     }
 
     @Test
@@ -311,7 +316,10 @@ class DailyFoodLogViewModelTest {
         addFoodViewModel.updateAddFoodServings("-1")
 
         val state = addFoodViewModel.addFoodState.value
-        assertEquals("Serving size must be greater than 0", state.servingsError)
+        assertEquals(
+            UiText.StringResource(R.string.food_entry_error_serving_positive),
+            state.servingsError
+        )
     }
 
     @Test
@@ -338,7 +346,10 @@ class DailyFoodLogViewModelTest {
 
         addFoodViewModel.updateAddFoodServings("abc")
 
-        assertEquals("Please enter a valid number", addFoodViewModel.addFoodState.value.servingsError)
+        assertEquals(
+            UiText.StringResource(R.string.food_entry_error_invalid_number),
+            addFoodViewModel.addFoodState.value.servingsError
+        )
     }
 
     @Test
@@ -432,7 +443,10 @@ class DailyFoodLogViewModelTest {
         advanceUntilIdle()
 
         val state = editFoodViewModel.editFoodState.value
-        assertEquals("Entry no longer exists", state.error)
+        assertEquals(
+            UiText.StringResource(R.string.food_entry_error_entry_missing),
+            state.error
+        )
     }
 
     @Test
@@ -474,7 +488,10 @@ class DailyFoodLogViewModelTest {
         viewModel.confirmDeleteEntry()
         advanceUntilIdle()
 
-        assertEquals("Entry deleted", viewModel.uiState.value.snackbarMessage)
+        assertEquals(
+            UiText.StringResource(R.string.daily_log_msg_entry_deleted),
+            viewModel.uiState.value.snackbarMessage
+        )
     }
 
     @Test
@@ -573,8 +590,9 @@ class DailyFoodLogViewModelTest {
     @Test
     fun `showSnackbar then clearSnackbar resets snackbar message`() = runTest {
         // The screen forwards add/edit success to the daily log via showSnackbar.
-        viewModel.showSnackbar("Entry added")
-        assertEquals("Entry added", viewModel.uiState.value.snackbarMessage)
+        val message = UiText.StringResource(R.string.daily_log_msg_entry_added)
+        viewModel.showSnackbar(message)
+        assertEquals(message, viewModel.uiState.value.snackbarMessage)
 
         viewModel.clearSnackbar()
         assertNull(viewModel.uiState.value.snackbarMessage)

@@ -28,6 +28,7 @@ import com.snaxlog.app.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.ui.common.asString
 import com.snaxlog.app.ui.components.MealCategorySelector
 import com.snaxlog.app.ui.components.NutritionPreview
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
@@ -72,7 +73,7 @@ fun EditFoodSheetContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = state.error ?: stringResource(R.string.common_unknown_error),
+                        text = state.error?.asString() ?: stringResource(R.string.common_unknown_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -142,7 +143,7 @@ fun EditFoodSheetContent(
                     label = { Text(stringResource(R.string.edit_food_servings_label)) },
                     isError = state.servingsError != null,
                     supportingText = state.servingsError?.let { error ->
-                        { Text(error, color = MaterialTheme.colorScheme.error) }
+                        { Text(error.asString(), color = MaterialTheme.colorScheme.error) }
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
