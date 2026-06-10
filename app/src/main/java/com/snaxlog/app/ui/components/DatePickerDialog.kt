@@ -11,8 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.snaxlog.app.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -79,6 +81,12 @@ fun SnaxlogDatePickerDialog(
         derivedStateOf { datePickerState.selectedDateMillis != null }
     }
 
+    val dialogDescription = stringResource(R.string.date_picker_dialog_description)
+    val titleDescription = stringResource(
+        R.string.date_picker_title_description,
+        formatDateForAccessibility(selectedDate)
+    )
+
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -100,16 +108,16 @@ fun SnaxlogDatePickerDialog(
                 },
                 enabled = confirmEnabled.value
             ) {
-                Text("Select")
+                Text(stringResource(R.string.date_picker_select))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.date_picker_cancel))
             }
         },
         modifier = modifier.semantics {
-            contentDescription = "Select a date. Future dates are not available."
+            contentDescription = dialogDescription
         }
     ) {
         DatePicker(
@@ -117,9 +125,9 @@ fun SnaxlogDatePickerDialog(
             showModeToggle = true,
             title = {
                 Text(
-                    text = "Select date",
+                    text = stringResource(R.string.date_picker_title),
                     modifier = Modifier.semantics {
-                        contentDescription = "Select a date dialog. Currently selected: ${formatDateForAccessibility(selectedDate)}"
+                        contentDescription = titleDescription
                     }
                 )
             }

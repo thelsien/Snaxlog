@@ -17,10 +17,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.Spacing
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 import java.text.NumberFormat
@@ -55,10 +58,11 @@ fun DailySummaryCard(
     carbsGoal: Double? = null,
     onGoalClick: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Today's Summary"
+    title: String = stringResource(R.string.daily_summary_default_title)
 ) {
     val customColors = SnaxlogThemeExtras.customColors
     val numberFormat = NumberFormat.getNumberInstance()
+    val context = LocalContext.current
 
     // Calculate calorie progress (AC-052, AC-055)
     val progress = if (calorieGoal != null && calorieGoal > 0) {
@@ -69,6 +73,7 @@ fun DailySummaryCard(
 
     // Build accessibility description
     val descriptionText = buildAccessibilityDescription(
+        context = context,
         caloriesConsumed = caloriesConsumed,
         calorieGoal = calorieGoal,
         remaining = remaining,
@@ -109,7 +114,7 @@ fun DailySummaryCard(
                 )
                 TextButton(onClick = onGoalClick) {
                     Text(
-                        text = if (calorieGoal != null) "Goals" else "Set Goal",
+                        text = if (calorieGoal != null) stringResource(R.string.daily_summary_goals) else stringResource(R.string.daily_summary_set_goal),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -121,7 +126,11 @@ fun DailySummaryCard(
             // Calorie numbers (AC-052)
             if (calorieGoal != null) {
                 Text(
-                    text = "${numberFormat.format(caloriesConsumed)} / ${numberFormat.format(calorieGoal)}",
+                    text = stringResource(
+                        R.string.daily_summary_calories_with_goal,
+                        numberFormat.format(caloriesConsumed),
+                        numberFormat.format(calorieGoal)
+                    ),
                     style = MaterialTheme.typography.displayMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     textAlign = TextAlign.Center
@@ -136,7 +145,7 @@ fun DailySummaryCard(
             }
 
             Text(
-                text = "calories",
+                text = stringResource(R.string.daily_summary_calories),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
@@ -172,7 +181,7 @@ fun DailySummaryCard(
                 // STATE-003: No Goal (AC-056)
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
-                    text = "Tap to set a goal for tracking",
+                    text = stringResource(R.string.daily_summary_no_goal_prompt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
@@ -247,6 +256,7 @@ internal fun getRemainingTextAndColor(
  * Builds the accessibility content description for the daily summary card.
  */
 private fun buildAccessibilityDescription(
+    context: android.content.Context,
     caloriesConsumed: Int,
     calorieGoal: Int?,
     remaining: Int?,
@@ -259,17 +269,33 @@ private fun buildAccessibilityDescription(
     return if (calorieGoal != null) {
         val percentage = (progress * 100).toInt().coerceAtLeast(0)
         val progressStatus = when {
-            progress >= PROGRESS_THRESHOLD_EXCEEDED -> "Over goal."
-            progress >= PROGRESS_THRESHOLD_WARNING -> "Approaching goal limit."
+            progress >= PROGRESS_THRESHOLD_EXCEEDED -> context.getString(R.string.daily_summary_acc_over_goal)
+            progress >= PROGRESS_THRESHOLD_WARNING -> context.getString(R.string.daily_summary_acc_approaching)
             else -> ""
         }
-        "Daily summary. ${numberFormat.format(caloriesConsumed)} of ${numberFormat.format(calorieGoal)} calories consumed. " +
-                "$percentage percent of goal. $progressStatus " +
-                "${remaining?.let { if (it >= 0) "${numberFormat.format(it)} remaining" else "Over by ${numberFormat.format(-it)}" } ?: ""}. " +
-                "Protein: ${formatMacro(proteinConsumed)}g, Fat: ${formatMacro(fatConsumed)}g, Carbs: ${formatMacro(carbsConsumed)}g. " +
-                "Tap to manage goals."
+        val remainingPart = remaining?.let {
+            if (it >= 0) {
+                context.getString(R.string.daily_summary_acc_remaining, numberFormat.format(it))
+            } else {
+                context.getString(R.string.daily_summary_acc_over_by, numberFormat.format(-it))
+            }
+        } ?: ""
+        context.getString(
+            R.string.daily_summary_acc_with_goal,
+            numberFormat.format(caloriesConsumed),
+            numberFormat.format(calorieGoal),
+            percentage,
+            progressStatus,
+            remainingPart,
+            formatMacro(proteinConsumed),
+            formatMacro(fatConsumed),
+            formatMacro(carbsConsumed)
+        )
     } else {
-        "Daily summary. ${numberFormat.format(caloriesConsumed)} calories consumed. No goal set. Tap to set a goal."
+        context.getString(
+            R.string.daily_summary_acc_no_goal,
+            numberFormat.format(caloriesConsumed)
+        )
     }
 }
 

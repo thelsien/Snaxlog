@@ -10,10 +10,12 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.Spacing
 
 /**
@@ -34,9 +36,9 @@ fun GoalFormField(
 ) {
     val isError = errorMessage != null
     val fieldDescription = if (isError) {
-        "$label field. Error: $errorMessage"
+        stringResource(R.string.goal_form_field_description_error, label, errorMessage!!)
     } else {
-        "$label field"
+        stringResource(R.string.goal_form_field_description, label)
     }
 
     Column(modifier = modifier) {

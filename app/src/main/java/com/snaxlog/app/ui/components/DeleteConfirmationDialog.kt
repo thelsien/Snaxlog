@@ -9,8 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.snaxlog.app.R
 
 /**
  * C-013: DeleteConfirmationDialog
@@ -24,9 +26,10 @@ fun DeleteConfirmationDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dialogDescription = stringResource(R.string.delete_dialog_description, title, message)
     AlertDialog(
         modifier = modifier.semantics {
-            contentDescription = "Confirmation dialog. $title. $message"
+            contentDescription = dialogDescription
         },
         onDismissRequest = onDismiss,
         icon = {
@@ -50,13 +53,13 @@ fun DeleteConfirmationDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.delete_dialog_cancel))
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(
-                    text = "Delete",
+                    text = stringResource(R.string.delete_dialog_delete),
                     color = MaterialTheme.colorScheme.error
                 )
             }

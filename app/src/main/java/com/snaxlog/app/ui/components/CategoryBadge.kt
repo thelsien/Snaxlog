@@ -17,9 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.ui.theme.BreakfastDark
 import com.snaxlog.app.ui.theme.BreakfastLight
@@ -48,6 +51,9 @@ fun CategoryBadge(
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val config = getCategoryBadgeConfig(category, isDarkTheme)
 
+    val label = stringResource(config.labelRes)
+    val badgeDescription = stringResource(R.string.category_badge_description, label)
+
     Box(
         modifier = modifier
             .size(24.dp)
@@ -57,7 +63,7 @@ fun CategoryBadge(
             )
             .padding(4.dp)
             .semantics {
-                contentDescription = "${config.label} category"
+                contentDescription = badgeDescription
             },
         contentAlignment = Alignment.Center
     ) {
@@ -74,7 +80,7 @@ fun CategoryBadge(
  * Configuration for a category badge.
  */
 private data class CategoryBadgeConfig(
-    val label: String,
+    val labelRes: Int,
     val icon: ImageVector,
     val color: Color
 )
@@ -85,22 +91,22 @@ private data class CategoryBadgeConfig(
 private fun getCategoryBadgeConfig(category: MealCategory, isDarkTheme: Boolean): CategoryBadgeConfig {
     return when (category) {
         MealCategory.BREAKFAST -> CategoryBadgeConfig(
-            label = "Breakfast",
+            labelRes = R.string.meal_category_breakfast,
             icon = Icons.Outlined.WbSunny,
             color = if (isDarkTheme) BreakfastDark else BreakfastLight
         )
         MealCategory.LUNCH -> CategoryBadgeConfig(
-            label = "Lunch",
+            labelRes = R.string.meal_category_lunch,
             icon = Icons.Outlined.LightMode,
             color = if (isDarkTheme) LunchDark else LunchLight
         )
         MealCategory.DINNER -> CategoryBadgeConfig(
-            label = "Dinner",
+            labelRes = R.string.meal_category_dinner,
             icon = Icons.Outlined.DarkMode,
             color = if (isDarkTheme) DinnerDark else DinnerLight
         )
         MealCategory.SNACKING -> CategoryBadgeConfig(
-            label = "Snacking",
+            labelRes = R.string.meal_category_snacking,
             icon = Icons.Outlined.NightsStay,
             color = if (isDarkTheme) SnackingDark else SnackingLight
         )

@@ -11,10 +11,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.CarbsDark
 import com.snaxlog.app.ui.theme.CarbsLight
 import com.snaxlog.app.ui.theme.FatDark
@@ -50,13 +52,13 @@ fun MacroInputField(
 ) {
     val isDarkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val macroColor = getMacroColor(macroType, isDarkTheme)
-    val label = getMacroLabel(macroType)
+    val label = stringResource(getMacroLabelRes(macroType))
     val isError = errorMessage != null
 
     val fieldDescription = if (isError) {
-        "$label field. Error: $errorMessage"
+        stringResource(R.string.macro_input_description_error, label, errorMessage!!)
     } else {
-        "$label field. Enter grams."
+        stringResource(R.string.macro_input_description, label)
     }
 
     Column(modifier = modifier) {
@@ -75,7 +77,7 @@ fun MacroInputField(
                 onValueChange(singleDecimal)
             },
             label = { Text(label) },
-            suffix = { Text("g") },
+            suffix = { Text(stringResource(R.string.macro_input_suffix)) },
             isError = isError,
             enabled = enabled,
             singleLine = true,
@@ -121,13 +123,13 @@ private fun getMacroColor(macroType: MacroType, isDarkTheme: Boolean): Color {
 }
 
 /**
- * Returns the label for a macro type.
+ * Returns the label resource for a macro type.
  */
-private fun getMacroLabel(macroType: MacroType): String {
+private fun getMacroLabelRes(macroType: MacroType): Int {
     return when (macroType) {
-        MacroType.PROTEIN -> "Protein"
-        MacroType.FAT -> "Fat"
-        MacroType.CARBS -> "Carbs"
+        MacroType.PROTEIN -> R.string.macro_protein
+        MacroType.FAT -> R.string.macro_fat
+        MacroType.CARBS -> R.string.macro_carbs
     }
 }
 

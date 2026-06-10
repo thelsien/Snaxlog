@@ -50,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
@@ -58,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.snaxlog.app.R
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.components.EmptyStateView
 import com.snaxlog.app.ui.components.FoodTypeBadge
@@ -119,14 +121,18 @@ fun CreateRecipeScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (formState.isEditMode) "Edit Recipe" else "Create Recipe"
+                        text = if (formState.isEditMode) {
+                            stringResource(R.string.create_recipe_title_edit)
+                        } else {
+                            stringResource(R.string.create_recipe_title_create)
+                        }
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back"
+                            contentDescription = stringResource(R.string.common_navigate_back)
                         )
                     }
                 },
@@ -155,11 +161,12 @@ fun CreateRecipeScreen(
                     .padding(Spacing.screenPadding)
             ) {
                 // Recipe Name Input
+                val recipeNameDescription = stringResource(R.string.create_recipe_name_input_description)
                 OutlinedTextField(
                     value = formState.nameInput,
                     onValueChange = { viewModel.updateName(it) },
-                    label = { Text("Recipe Name") },
-                    placeholder = { Text("e.g., Chicken Stir Fry") },
+                    label = { Text(stringResource(R.string.create_recipe_name_label)) },
+                    placeholder = { Text(stringResource(R.string.create_recipe_name_placeholder)) },
                     isError = formState.nameError != null,
                     supportingText = formState.nameError?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
@@ -168,7 +175,7 @@ fun CreateRecipeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics {
-                            contentDescription = "Recipe name input"
+                            contentDescription = recipeNameDescription
                             formState.nameError?.let { error(it) }
                         }
                 )
@@ -188,7 +195,7 @@ fun CreateRecipeScreen(
                             modifier = Modifier.padding(end = Spacing.xs)
                         )
                         Text(
-                            text = "A food with this name already exists",
+                            text = stringResource(R.string.create_recipe_duplicate_warning),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.tertiary
                         )
@@ -198,11 +205,12 @@ fun CreateRecipeScreen(
                 Spacer(modifier = Modifier.height(Spacing.base))
 
                 // Number of Servings Input
+                val servingsDescription = stringResource(R.string.create_recipe_servings_description)
                 OutlinedTextField(
                     value = formState.numberOfServingsInput,
                     onValueChange = { viewModel.updateNumberOfServings(it) },
-                    label = { Text("Number of Servings") },
-                    placeholder = { Text("e.g., 4") },
+                    label = { Text(stringResource(R.string.create_recipe_servings_label)) },
+                    placeholder = { Text(stringResource(R.string.create_recipe_servings_placeholder)) },
                     isError = formState.numberOfServingsError != null,
                     supportingText = formState.numberOfServingsError?.let { error ->
                         { Text(error, color = MaterialTheme.colorScheme.error) }
@@ -212,7 +220,7 @@ fun CreateRecipeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics {
-                            contentDescription = "Number of servings this recipe makes"
+                            contentDescription = servingsDescription
                             formState.numberOfServingsError?.let { error(it) }
                         }
                 )
@@ -226,7 +234,7 @@ fun CreateRecipeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Ingredients",
+                        text = stringResource(R.string.create_recipe_ingredients),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -238,7 +246,7 @@ fun CreateRecipeScreen(
                             contentDescription = null,
                             modifier = Modifier.padding(end = Spacing.xs)
                         )
-                        Text("Add Ingredient")
+                        Text(stringResource(R.string.create_recipe_add_ingredient))
                     }
                 }
 
@@ -263,7 +271,7 @@ fun CreateRecipeScreen(
                         )
                     ) {
                         Text(
-                            text = "No ingredients added yet. Tap \"Add Ingredient\" to start building your recipe.",
+                            text = stringResource(R.string.create_recipe_no_ingredients),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(Spacing.base)
@@ -317,7 +325,7 @@ fun CreateRecipeScreen(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.create_recipe_cancel))
                     }
                     Spacer(modifier = Modifier.width(Spacing.sm))
                     Button(
@@ -333,7 +341,13 @@ fun CreateRecipeScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(if (formState.isEditMode) "Save Changes" else "Create Recipe")
+                            Text(
+                                if (formState.isEditMode) {
+                                    stringResource(R.string.create_recipe_save_changes)
+                                } else {
+                                    stringResource(R.string.create_recipe_create)
+                                }
+                            )
                         }
                     }
                 }
@@ -377,7 +391,7 @@ private fun IngredientPickerContent(
         if (formState.selectedFoodForAdd == null) {
             // Step 1: Search and select food
             Text(
-                text = "Add Ingredient",
+                text = stringResource(R.string.create_recipe_picker_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -385,20 +399,21 @@ private fun IngredientPickerContent(
             Spacer(modifier = Modifier.height(Spacing.base))
 
             // Search field
+            val searchDescription = stringResource(R.string.create_recipe_picker_search_description)
             OutlinedTextField(
                 value = formState.ingredientSearchQuery,
                 onValueChange = { viewModel.searchIngredients(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "Search foods to add as ingredient" },
-                placeholder = { Text("Search foods...") },
+                    .semantics { contentDescription = searchDescription },
+                placeholder = { Text(stringResource(R.string.create_recipe_picker_search_placeholder)) },
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null)
                 },
                 trailingIcon = {
                     if (formState.ingredientSearchQuery.isNotEmpty()) {
                         IconButton(onClick = { viewModel.searchIngredients("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.create_recipe_picker_clear_search))
                         }
                     }
                 },
@@ -416,8 +431,8 @@ private fun IngredientPickerContent(
                 )
             } else if (formState.availableFoods.isEmpty()) {
                 EmptyStateView(
-                    title = "No foods found",
-                    message = "Try different search terms"
+                    title = stringResource(R.string.create_recipe_picker_no_foods_title),
+                    message = stringResource(R.string.create_recipe_picker_no_foods_message)
                 )
             } else {
                 LazyColumn(
@@ -445,7 +460,7 @@ private fun IngredientPickerContent(
                 onClick = { viewModel.closeIngredientPicker() },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.create_recipe_picker_cancel))
             }
         } else {
             // Step 2: Specify quantity for selected food
@@ -455,7 +470,7 @@ private fun IngredientPickerContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { viewModel.clearFoodSelection() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to food list")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.create_recipe_picker_back))
                 }
                 Text(
                     text = food.name,
@@ -470,18 +485,28 @@ private fun IngredientPickerContent(
 
             // Food info - use appropriate serving display based on food type
             val servingDisplay = if (food.isUserCreated) {
-                "${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}"
+                stringResource(
+                    R.string.create_recipe_picker_serving_amount_unit,
+                    food.servingSizeValue.formatForDisplay(),
+                    food.servingUnit.abbreviation
+                )
             } else {
                 food.servingSize
             }
 
             Text(
-                text = "Nutrition per $servingDisplay:",
+                text = stringResource(R.string.create_recipe_picker_nutrition_per, servingDisplay),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${food.caloriesPerServing} cal | P: ${food.proteinPerServing.formatForDisplay()}g | F: ${food.fatPerServing.formatForDisplay()}g | C: ${food.carbsPerServing.formatForDisplay()}g",
+                text = stringResource(
+                    R.string.create_recipe_picker_nutrition_line,
+                    food.caloriesPerServing,
+                    food.proteinPerServing.formatForDisplay(),
+                    food.fatPerServing.formatForDisplay(),
+                    food.carbsPerServing.formatForDisplay()
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -492,9 +517,9 @@ private fun IngredientPickerContent(
             OutlinedTextField(
                 value = formState.ingredientQuantityInput,
                 onValueChange = { viewModel.updateIngredientQuantity(it) },
-                label = { Text("Servings") },
+                label = { Text(stringResource(R.string.create_recipe_picker_servings_label)) },
                 supportingText = {
-                    Text("1 serving = $servingDisplay")
+                    Text(stringResource(R.string.create_recipe_picker_serving_equals, servingDisplay))
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -509,7 +534,7 @@ private fun IngredientPickerContent(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = { viewModel.closeIngredientPicker() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.create_recipe_picker_cancel))
                 }
                 Spacer(modifier = Modifier.width(Spacing.sm))
                 Button(
@@ -518,7 +543,7 @@ private fun IngredientPickerContent(
                         viewModel.closeIngredientPicker()
                     }
                 ) {
-                    Text("Add to Recipe")
+                    Text(stringResource(R.string.create_recipe_picker_add))
                 }
             }
 
@@ -538,10 +563,19 @@ private fun FoodPickerItem(
 ) {
     // For pre-loaded foods, use servingSize string; for custom foods, use servingSizeValue + unit
     val servingDisplay = if (food.isUserCreated) {
-        "${food.servingSizeValue.formatForDisplay()} ${food.servingUnit.abbreviation}"
+        stringResource(
+            R.string.create_recipe_picker_serving_amount_unit,
+            food.servingSizeValue.formatForDisplay(),
+            food.servingUnit.abbreviation
+        )
     } else {
         food.servingSize
     }
+    val pickerItemDescription = stringResource(
+        R.string.create_recipe_picker_food_description,
+        food.name,
+        food.caloriesPerServing
+    )
 
     Row(
         modifier = Modifier
@@ -552,7 +586,7 @@ private fun FoodPickerItem(
                 vertical = Spacing.listItemPaddingVertical
             )
             .semantics {
-                contentDescription = "${food.name}, ${food.caloriesPerServing} calories. Tap to select."
+                contentDescription = pickerItemDescription
             },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -587,7 +621,7 @@ private fun FoodPickerItem(
                 color = MaterialTheme.colorScheme.tertiary
             )
             Text(
-                text = " cal",
+                text = stringResource(R.string.create_recipe_picker_cal_suffix),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

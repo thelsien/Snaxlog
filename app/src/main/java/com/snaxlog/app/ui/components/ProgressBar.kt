@@ -13,9 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.snaxlog.app.R
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
 
 /**
@@ -77,7 +79,7 @@ fun ProgressBar(
     )
 
     val percentage = (progress * 100).toInt().coerceAtLeast(0)
-    val accessibilityText = "$percentage% of goal"
+    val accessibilityText = stringResource(R.string.progress_bar_description, percentage)
 
     LinearProgressIndicator(
         progress = { animatedProgress.coerceIn(0f, 1f) },
