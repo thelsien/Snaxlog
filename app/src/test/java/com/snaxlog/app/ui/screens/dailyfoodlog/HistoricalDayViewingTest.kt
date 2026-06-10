@@ -56,6 +56,8 @@ class HistoricalDayViewingTest {
     private lateinit var calorieGoalRepository: CalorieGoalRepository
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: DailyFoodLogViewModel
+    private lateinit var addFoodViewModel: AddFoodViewModel
+    private lateinit var editFoodViewModel: EditFoodViewModel
 
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -93,9 +95,17 @@ class HistoricalDayViewingTest {
 
         viewModel = DailyFoodLogViewModel(
             foodIntakeRepository = foodIntakeRepository,
-            foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
             savedStateHandle = savedStateHandle,
+            clock = Clock.systemDefaultZone()
+        )
+        addFoodViewModel = AddFoodViewModel(
+            foodIntakeRepository = foodIntakeRepository,
+            foodRepository = foodRepository,
+            clock = Clock.systemDefaultZone()
+        )
+        editFoodViewModel = EditFoodViewModel(
+            foodIntakeRepository = foodIntakeRepository,
             clock = Clock.systemDefaultZone()
         )
     }
@@ -243,7 +253,6 @@ class HistoricalDayViewingTest {
 
         val restoredViewModel = DailyFoodLogViewModel(
             foodIntakeRepository = foodIntakeRepository,
-            foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
             savedStateHandle = savedStateHandleWithDate,
             clock = Clock.systemDefaultZone()
@@ -311,10 +320,10 @@ class HistoricalDayViewingTest {
         val entryWithFood = FoodIntakeWithFood(entry = historicalEntry, food = testFood)
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns entryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        val state = viewModel.editFoodState.value
+        val state = editFoodViewModel.editFoodState.value
         assertTrue(state.isEditingHistorical)
         assertEquals(historicalDate, state.entryDate)
     }
@@ -331,10 +340,10 @@ class HistoricalDayViewingTest {
         val entryWithFood = FoodIntakeWithFood(entry = todayEntry, food = testFood)
         coEvery { foodIntakeRepository.getEntryWithFoodById(1L) } returns entryWithFood
 
-        viewModel.loadEntryForEdit(1L)
+        editFoodViewModel.loadEntryForEdit(1L)
         advanceUntilIdle()
 
-        val state = viewModel.editFoodState.value
+        val state = editFoodViewModel.editFoodState.value
         assertFalse(state.isEditingHistorical)
         assertEquals(todayDate, state.entryDate)
     }
@@ -374,12 +383,12 @@ class HistoricalDayViewingTest {
     @Test
     fun `AC-066 - openAddFood on historical date sets isAddingToHistorical`() = runTest {
         val historicalDate = LocalDate.now().minusDays(3)
-        viewModel.setSelectedDate(historicalDate)
         advanceUntilIdle()
 
-        viewModel.openAddFood()
+        // The screen passes the currently selected date explicitly when opening the sheet.
+        addFoodViewModel.openAddFood(historicalDate)
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertTrue(state.isAddingToHistorical)
         assertEquals(historicalDate, state.targetDate)
     }
@@ -387,11 +396,10 @@ class HistoricalDayViewingTest {
     @Test
     fun `openAddFood on today does not set isAddingToHistorical`() = runTest {
         advanceUntilIdle()
-        assertTrue(viewModel.uiState.value.isViewingToday)
 
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood(LocalDate.now())
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertFalse(state.isAddingToHistorical)
         assertEquals(LocalDate.now(), state.targetDate)
     }
@@ -399,12 +407,11 @@ class HistoricalDayViewingTest {
     @Test
     fun `AC-067 - no auto-category selection for historical dates`() = runTest {
         val historicalDate = LocalDate.now().minusDays(3)
-        viewModel.setSelectedDate(historicalDate)
         advanceUntilIdle()
 
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood(historicalDate)
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertNull(state.autoSelectedCategory)
         assertNull(state.selectedCategory)
     }
@@ -412,11 +419,10 @@ class HistoricalDayViewingTest {
     @Test
     fun `auto-category selection works for today`() = runTest {
         advanceUntilIdle()
-        assertTrue(viewModel.uiState.value.isViewingToday)
 
-        viewModel.openAddFood()
+        addFoodViewModel.openAddFood(LocalDate.now())
 
-        val state = viewModel.addFoodState.value
+        val state = addFoodViewModel.addFoodState.value
         assertNotNull(state.autoSelectedCategory)
         assertNotNull(state.selectedCategory)
     }
@@ -426,12 +432,11 @@ class HistoricalDayViewingTest {
         val historicalDate = LocalDate.now().minusDays(5)
         coEvery { foodIntakeRepository.addEntry(any()) } returns 1L
 
-        viewModel.setSelectedDate(historicalDate)
         advanceUntilIdle()
 
-        viewModel.openAddFood()
-        viewModel.selectFood(testFood)
-        viewModel.saveAddFood()
+        addFoodViewModel.openAddFood(historicalDate)
+        addFoodViewModel.selectFood(testFood)
+        addFoodViewModel.saveAddFood()
         advanceUntilIdle()
 
         val expectedDateString = historicalDate.format(dateFormatter)

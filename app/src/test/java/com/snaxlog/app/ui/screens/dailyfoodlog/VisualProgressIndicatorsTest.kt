@@ -14,7 +14,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -51,7 +50,6 @@ class VisualProgressIndicatorsTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var foodIntakeRepository: FoodIntakeRepository
-    private lateinit var foodRepository: FoodRepository
     private lateinit var calorieGoalRepository: CalorieGoalRepository
     private lateinit var viewModel: DailyFoodLogViewModel
 
@@ -60,13 +58,6 @@ class VisualProgressIndicatorsTest {
         servingSize = "1 medium (182g)", servingWeightGrams = 182.0,
         caloriesPerServing = 95, proteinPerServing = 0.5,
         fatPerServing = 0.3, carbsPerServing = 25.1
-    )
-
-    private val testFood2 = FoodEntity(
-        id = 2, name = "Grilled Chicken Breast", category = "Protein",
-        servingSize = "1 breast (100g)", servingWeightGrams = 100.0,
-        caloriesPerServing = 165, proteinPerServing = 31.0,
-        fatPerServing = 3.6, carbsPerServing = 0.0
     )
 
     private val goalWithMacros = CalorieGoalEntity(
@@ -83,24 +74,19 @@ class VisualProgressIndicatorsTest {
 
     private val entriesFlow = MutableStateFlow<List<FoodIntakeWithFood>>(emptyList())
     private val goalFlow = MutableStateFlow<CalorieGoalEntity?>(null)
-    private val allFoodsFlow = MutableStateFlow(listOf(testFood, testFood2))
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
         foodIntakeRepository = mockk(relaxed = true)
-        foodRepository = mockk(relaxed = true)
         calorieGoalRepository = mockk(relaxed = true)
 
         every { foodIntakeRepository.getEntriesForDate(any()) } returns entriesFlow
         every { calorieGoalRepository.getActiveGoal() } returns goalFlow
-        every { foodRepository.getAllFoods() } returns allFoodsFlow
-        every { foodRepository.searchFoods(any()) } returns flowOf(listOf(testFood2))
 
         viewModel = DailyFoodLogViewModel(
             foodIntakeRepository = foodIntakeRepository,
-            foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
             savedStateHandle = SavedStateHandle(),
             clock = Clock.systemDefaultZone()

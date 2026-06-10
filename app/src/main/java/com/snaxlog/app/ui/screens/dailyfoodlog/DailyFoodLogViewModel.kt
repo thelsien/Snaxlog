@@ -4,21 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.snaxlog.app.data.local.entity.CalorieGoalEntity
-import com.snaxlog.app.data.local.entity.FoodEntity
-import com.snaxlog.app.data.local.entity.FoodIntakeEntryEntity
 import com.snaxlog.app.data.local.entity.FoodIntakeWithFood
-import com.snaxlog.app.data.local.entity.MealCategory
 import com.snaxlog.app.data.repository.CalorieGoalRepository
 import com.snaxlog.app.data.repository.FoodIntakeRepository
-import com.snaxlog.app.data.repository.FoodRepository
-import com.snaxlog.app.util.MealCategoryUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -97,59 +90,10 @@ data class DailyFoodLogUiState(
     val canNavigateForward: Boolean = false
 )
 
-/**
- * UI state for the Add Food bottom sheet (S-003).
- * FIP-005: Added meal category fields.
- * FIP-EPIC-005: Added target date for historical entries (US-017).
- */
-data class AddFoodUiState(
-    val searchQuery: String = "",
-    val foods: List<FoodEntity> = emptyList(),
-    val selectedFood: FoodEntity? = null,
-    val servingsInput: String = "1.0",
-    val servingsError: String? = null,
-    val previewCalories: Int = 0,
-    val previewProtein: Double = 0.0,
-    val previewFat: Double = 0.0,
-    val previewCarbs: Double = 0.0,
-    val isSaving: Boolean = false,
-    val isLoadingFoods: Boolean = true,
-    // FIP-005: Meal category fields
-    val selectedCategory: MealCategory? = null,
-    val autoSelectedCategory: MealCategory? = null,
-    // FIP-EPIC-005: Target date for historical entries
-    val targetDate: LocalDate = LocalDate.now(),
-    val isAddingToHistorical: Boolean = false
-)
-
-/**
- * UI state for the Edit Food bottom sheet (S-004).
- * FIP-005: Added meal category field.
- * FIP-EPIC-005: Added entry date display for historical context (US-015).
- */
-data class EditFoodUiState(
-    val entry: FoodIntakeWithFood? = null,
-    val servingsInput: String = "1.0",
-    val servingsError: String? = null,
-    val previewCalories: Int = 0,
-    val previewProtein: Double = 0.0,
-    val previewFat: Double = 0.0,
-    val previewCarbs: Double = 0.0,
-    val isSaving: Boolean = false,
-    val isLoading: Boolean = true,
-    val error: String? = null,
-    // FIP-005: Meal category field (no auto-selection in edit mode)
-    val selectedCategory: MealCategory? = null,
-    // FIP-EPIC-005: Entry date for context display
-    val entryDate: LocalDate? = null,
-    val isEditingHistorical: Boolean = false
-)
-
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DailyFoodLogViewModel @Inject constructor(
     private val foodIntakeRepository: FoodIntakeRepository,
-    private val foodRepository: FoodRepository,
     private val calorieGoalRepository: CalorieGoalRepository,
     private val savedStateHandle: SavedStateHandle,
     private val clock: Clock
@@ -172,22 +116,10 @@ class DailyFoodLogViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DailyFoodLogUiState())
     val uiState: StateFlow<DailyFoodLogUiState> = _uiState.asStateFlow()
 
-    // Add food state
-    private val _addFoodState = MutableStateFlow(AddFoodUiState())
-    val addFoodState: StateFlow<AddFoodUiState> = _addFoodState.asStateFlow()
-
-    // Edit food state
-    private val _editFoodState = MutableStateFlow(EditFoodUiState())
-    val editFoodState: StateFlow<EditFoodUiState> = _editFoodState.asStateFlow()
-
-    // Search query for debounce
-    private val _searchQuery = MutableStateFlow("")
-
     init {
         observeSelectedDate()
         observeEntries()
         observeGoal()
-        observeFoodSearch()
     }
 
     /**
@@ -283,25 +215,6 @@ class DailyFoodLogViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-    private fun observeFoodSearch() {
-        viewModelScope.launch {
-            _searchQuery
-                .debounce(300L)
-                .flatMapLatest { query ->
-                    if (query.isBlank()) {
-                        foodRepository.getAllFoods()
-                    } else {
-                        foodRepository.searchFoods(query.trim())
-                    }
-                }
-                .collect { foods ->
-                    _addFoodState.update {
-                        it.copy(foods = foods, isLoadingFoods = false)
-                    }
-                }
         }
     }
 
@@ -434,280 +347,30 @@ class DailyFoodLogViewModel @Inject constructor(
         _uiState.update { it.copy(snackbarMessage = null) }
     }
 
-    // ============================
-    // Add food flow (US-002, US-005)
-    // ============================
-
-    fun openAddFood() {
-        val targetDate = _selectedDate.value
-        val today = LocalDate.now(clock)
-        val isHistorical = targetDate != today
-
-        // FIP-005: Auto-select category based on current time
-        // FIP-EPIC-005 US-017: Disable auto-selection for historical dates
-        val autoCategory = if (isHistorical) null else MealCategoryUtils.getCurrentMealCategory()
-
-        _addFoodState.value = AddFoodUiState(
-            selectedCategory = autoCategory,
-            autoSelectedCategory = autoCategory,
-            targetDate = targetDate,
-            isAddingToHistorical = isHistorical
-        )
-        _searchQuery.value = ""
+    /**
+     * Displays a snackbar message on the daily log.
+     *
+     * The add/edit-food flows now live in [AddFoodViewModel] / [EditFoodViewModel]; the screen
+     * forwards their success results here so the snackbar continues to surface on the main
+     * screen. Literals (e.g. "Entry added", "Entry updated") are kept in sync with the
+     * comparisons in DailyFoodLogScreen.
+     */
+    fun showSnackbar(message: String) {
+        _uiState.update { it.copy(snackbarMessage = message) }
     }
 
     /**
-     * FIP-005: Update meal category selection in add food flow.
+     * Surfaces an error message on the daily log (e.g. a failed add/edit save).
      */
-    fun updateAddFoodCategory(category: MealCategory?) {
-        _addFoodState.update { it.copy(selectedCategory = category) }
-    }
-
-    fun updateSearchQuery(query: String) {
-        // EC-040: Limit search input to 100 characters
-        val limited = query.take(100)
-        _addFoodState.update { it.copy(searchQuery = limited) }
-        _searchQuery.value = limited
-    }
-
-    fun clearSearch() {
-        _addFoodState.update { it.copy(searchQuery = "") }
-        _searchQuery.value = ""
-    }
-
-    fun selectFood(food: FoodEntity) {
-        _addFoodState.update {
-            it.copy(
-                selectedFood = food,
-                servingsInput = "1.0",
-                servingsError = null
-            )
-        }
-        updateAddFoodPreview("1.0", food)
-    }
-
-    fun clearFoodSelection() {
-        _addFoodState.update {
-            it.copy(
-                selectedFood = null,
-                servingsInput = "1.0",
-                servingsError = null,
-                previewCalories = 0,
-                previewProtein = 0.0,
-                previewFat = 0.0,
-                previewCarbs = 0.0
-            )
-        }
-    }
-
-    fun updateAddFoodServings(input: String) {
-        val food = _addFoodState.value.selectedFood ?: return
-        val error = validateServings(input)
-        _addFoodState.update { it.copy(servingsInput = input, servingsError = error) }
-        if (error == null) {
-            updateAddFoodPreview(input, food)
-        }
-    }
-
-    private fun updateAddFoodPreview(servingsStr: String, food: FoodEntity) {
-        val servings = servingsStr.toDoubleOrNull() ?: return
-        if (servings <= 0) return
-        _addFoodState.update {
-            it.copy(
-                previewCalories = (food.caloriesPerServing * servings).roundToInt(),
-                previewProtein = roundToOneDecimal(food.proteinPerServing * servings),
-                previewFat = roundToOneDecimal(food.fatPerServing * servings),
-                previewCarbs = roundToOneDecimal(food.carbsPerServing * servings)
-            )
-        }
-    }
-
-    fun saveAddFood() {
-        val state = _addFoodState.value
-        val food = state.selectedFood ?: return
-        val servings = state.servingsInput.toDoubleOrNull() ?: return
-        val error = validateServings(state.servingsInput)
-        if (error != null) {
-            _addFoodState.update { it.copy(servingsError = error) }
-            return
-        }
-
-        // EC-020: Prevent duplicate saves
-        if (state.isSaving) return
-        _addFoodState.update { it.copy(isSaving = true) }
-
-        viewModelScope.launch {
-            try {
-                // FIP-EPIC-005 US-017: Use target date for historical entries (EC-122)
-                val targetDate = state.targetDate
-                val today = LocalDate.now(clock)
-
-                // EC-123: Defensive check to prevent future dates
-                val safeDate = if (targetDate > today) today else targetDate
-                val dateString = safeDate.format(DATE_FORMATTER)
-
-                // For historical entries, use a timestamp at the end of that day
-                // For today's entries, use current timestamp
-                val timestamp = if (safeDate == today) {
-                    clock.millis()
-                } else {
-                    // Use noon on the historical date for ordering purposes
-                    safeDate.atTime(12, 0).toEpochSecond(java.time.ZoneOffset.UTC) * 1000
-                }
-
-                // FIP-005: Include meal category in entry
-                val entry = FoodIntakeEntryEntity(
-                    foodId = food.id,
-                    servings = servings,
-                    totalCalories = (food.caloriesPerServing * servings).roundToInt(),
-                    totalProtein = roundToOneDecimal(food.proteinPerServing * servings),
-                    totalFat = roundToOneDecimal(food.fatPerServing * servings),
-                    totalCarbs = roundToOneDecimal(food.carbsPerServing * servings),
-                    date = dateString,
-                    timestamp = timestamp,
-                    mealCategory = state.selectedCategory
-                )
-                foodIntakeRepository.addEntry(entry)
-                _addFoodState.update { it.copy(isSaving = false) }
-                _uiState.update { it.copy(snackbarMessage = "Entry added") }
-            } catch (e: Exception) {
-                _addFoodState.update {
-                    it.copy(isSaving = false)
-                }
-                _uiState.update { it.copy(error = "Failed to save entry. Please try again.") }
-            }
-        }
-    }
-
-    // ============================
-    // Edit food flow (US-003)
-    // ============================
-
-    fun loadEntryForEdit(entryId: Long) {
-        _editFoodState.value = EditFoodUiState(isLoading = true)
-        viewModelScope.launch {
-            try {
-                val entryWithFood = foodIntakeRepository.getEntryWithFoodById(entryId)
-                if (entryWithFood != null) {
-                    val servingsStr = formatServings(entryWithFood.entry.servings)
-                    // FIP-EPIC-005 US-015: Parse entry date for historical context
-                    val entryDate = try {
-                        LocalDate.parse(entryWithFood.entry.date, DATE_FORMATTER)
-                    } catch (e: Exception) {
-                        null
-                    }
-                    val today = LocalDate.now(clock)
-                    val isHistorical = entryDate != null && entryDate != today
-
-                    // FIP-005: Load existing meal category
-                    _editFoodState.update {
-                        it.copy(
-                            entry = entryWithFood,
-                            servingsInput = servingsStr,
-                            previewCalories = entryWithFood.entry.totalCalories,
-                            previewProtein = entryWithFood.entry.totalProtein,
-                            previewFat = entryWithFood.entry.totalFat,
-                            previewCarbs = entryWithFood.entry.totalCarbs,
-                            isLoading = false,
-                            error = null,
-                            selectedCategory = entryWithFood.entry.mealCategory,
-                            entryDate = entryDate,
-                            isEditingHistorical = isHistorical
-                        )
-                    }
-                } else {
-                    // EC-024: Entry was deleted while user is trying to edit
-                    _editFoodState.update {
-                        it.copy(isLoading = false, error = "Entry no longer exists")
-                    }
-                }
-            } catch (e: Exception) {
-                _editFoodState.update {
-                    it.copy(isLoading = false, error = "Failed to load entry")
-                }
-            }
-        }
+    fun showError(message: String) {
+        _uiState.update { it.copy(error = message) }
     }
 
     /**
-     * FIP-005: Update meal category selection in edit food flow.
+     * Exposes the currently selected date so the screen can pass it explicitly to
+     * [AddFoodViewModel.openAddFood] (entries are logged to the selected day, US-017).
      */
-    fun updateEditFoodCategory(category: MealCategory?) {
-        _editFoodState.update { it.copy(selectedCategory = category) }
-    }
-
-    fun updateEditFoodServings(input: String) {
-        val entryWithFood = _editFoodState.value.entry ?: return
-        val error = validateServings(input)
-        _editFoodState.update { it.copy(servingsInput = input, servingsError = error) }
-        if (error == null) {
-            val servings = input.toDoubleOrNull() ?: return
-            if (servings <= 0) return
-            val food = entryWithFood.food
-            _editFoodState.update {
-                it.copy(
-                    previewCalories = (food.caloriesPerServing * servings).roundToInt(),
-                    previewProtein = roundToOneDecimal(food.proteinPerServing * servings),
-                    previewFat = roundToOneDecimal(food.fatPerServing * servings),
-                    previewCarbs = roundToOneDecimal(food.carbsPerServing * servings)
-                )
-            }
-        }
-    }
-
-    fun saveEditFood() {
-        val state = _editFoodState.value
-        val entryWithFood = state.entry ?: return
-        val servings = state.servingsInput.toDoubleOrNull() ?: return
-        val error = validateServings(state.servingsInput)
-        if (error != null) {
-            _editFoodState.update { it.copy(servingsError = error) }
-            return
-        }
-        if (state.isSaving) return
-        _editFoodState.update { it.copy(isSaving = true) }
-
-        viewModelScope.launch {
-            try {
-                val food = entryWithFood.food
-                // FIP-005: Include meal category in update
-                val updatedEntry = entryWithFood.entry.copy(
-                    servings = servings,
-                    totalCalories = (food.caloriesPerServing * servings).roundToInt(),
-                    totalProtein = roundToOneDecimal(food.proteinPerServing * servings),
-                    totalFat = roundToOneDecimal(food.fatPerServing * servings),
-                    totalCarbs = roundToOneDecimal(food.carbsPerServing * servings),
-                    mealCategory = state.selectedCategory
-                )
-                foodIntakeRepository.updateEntry(updatedEntry)
-                _editFoodState.update { it.copy(isSaving = false) }
-                _uiState.update { it.copy(snackbarMessage = "Entry updated") }
-            } catch (e: Exception) {
-                _editFoodState.update { it.copy(isSaving = false) }
-                _uiState.update { it.copy(error = "Failed to update entry. Please try again.") }
-            }
-        }
-    }
-
-    // ============================
-    // Validation (EC-011, EC-012, EC-013, EC-014, EC-015, EC-023)
-    // ============================
-
-    private fun validateServings(input: String): String? {
-        if (input.isBlank()) return "Serving size is required"
-
-        val servings = input.toDoubleOrNull()
-            ?: return "Please enter a valid number"
-
-        if (servings <= 0) return "Serving size must be greater than 0"
-
-        // EC-014: Check decimal places
-        if (input.contains(".") && input.substringAfter(".").length > 2) {
-            return "Maximum 2 decimal places"
-        }
-
-        return null
-    }
+    fun currentSelectedDate(): LocalDate = _selectedDate.value
 
     // ============================
     // Progress computation (US-012)
@@ -772,15 +435,5 @@ class DailyFoodLogViewModel @Inject constructor(
 
     private fun roundToOneDecimal(value: Double): Double {
         return (value * 10).roundToInt() / 10.0
-    }
-
-    private fun formatServings(servings: Double): String {
-        return if (servings == servings.toLong().toDouble()) {
-            "${servings.toLong()}.0"
-        } else {
-            String.format("%.2f", servings).trimEnd('0').let {
-                if (it.endsWith(".")) "${it}0" else it
-            }
-        }
     }
 }

@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -74,16 +75,19 @@ import java.util.Locale
 fun DailyFoodLogScreen(
     viewModel: DailyFoodLogViewModel,
     onNavigateToGoals: () -> Unit = {},
-    onNavigateToCustomFoods: () -> Unit = {}
+    onNavigateToCustomFoods: () -> Unit = {},
+    addFoodViewModel: AddFoodViewModel = hiltViewModel(),
+    editFoodViewModel: EditFoodViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val addFoodState by addFoodViewModel.addFoodState.collectAsStateWithLifecycle()
+    val editFoodState by editFoodViewModel.editFoodState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val addFoodEntryDescription = stringResource(R.string.daily_log_add_food)
 
     // Bottom sheet states
     var showAddFoodSheet by remember { mutableStateOf(false) }
     var showEditFoodSheet by remember { mutableStateOf(false) }
-    var editingEntryId by remember { mutableStateOf<Long?>(null) }
 
     val addFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val editFoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -99,17 +103,33 @@ fun DailyFoodLogScreen(
     // Handle snackbar messages
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
-            // Close sheets immediately before showing snackbar
-            // (showSnackbar suspends until dismissed, which would block sheet closure)
-            if (message == "Entry added") {
-                showAddFoodSheet = false
-            }
-            if (message == "Entry updated") {
-                showEditFoodSheet = false
-            }
-
             snackbarHostState.showSnackbar(message)
             viewModel.clearSnackbar()
+        }
+    }
+
+    // Add-food result: close the sheet and surface the "Entry added" snackbar on the main screen.
+    // The literal is kept in sync with the AddFoodViewModel/snackbar contract.
+    LaunchedEffect(addFoodState.saveSuccess, addFoodState.saveError) {
+        if (addFoodState.saveSuccess) {
+            showAddFoodSheet = false
+            viewModel.showSnackbar("Entry added")
+            addFoodViewModel.onSaveHandled()
+        } else if (addFoodState.saveError) {
+            viewModel.showError("Failed to save entry. Please try again.")
+            addFoodViewModel.onSaveHandled()
+        }
+    }
+
+    // Edit-food result: close the sheet and surface the "Entry updated" snackbar on the main screen.
+    LaunchedEffect(editFoodState.saveSuccess, editFoodState.saveError) {
+        if (editFoodState.saveSuccess) {
+            showEditFoodSheet = false
+            viewModel.showSnackbar("Entry updated")
+            editFoodViewModel.onSaveHandled()
+        } else if (editFoodState.saveError) {
+            viewModel.showError("Failed to update entry. Please try again.")
+            editFoodViewModel.onSaveHandled()
         }
     }
 
@@ -169,7 +189,8 @@ fun DailyFoodLogScreen(
             if (!uiState.isLoading && uiState.error == null) {
                 FloatingActionButton(
                     onClick = {
-                        viewModel.openAddFood()
+                        // Pass the currently selected date explicitly so entries log to that day (US-017).
+                        addFoodViewModel.openAddFood(viewModel.currentSelectedDate())
                         showAddFoodSheet = true
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -318,8 +339,7 @@ fun DailyFoodLogScreen(
                                     calories = entryWithFood.entry.totalCalories,
                                     timestamp = timeStr,
                                     onTap = {
-                                        editingEntryId = entryWithFood.entry.id
-                                        viewModel.loadEntryForEdit(entryWithFood.entry.id)
+                                        editFoodViewModel.loadEntryForEdit(entryWithFood.entry.id)
                                         showEditFoodSheet = true
                                     },
                                     onDelete = {
@@ -353,7 +373,7 @@ fun DailyFoodLogScreen(
                 sheetState = addFoodSheetState
             ) {
                 AddFoodSheetContent(
-                    viewModel = viewModel,
+                    viewModel = addFoodViewModel,
                     onDismiss = { showAddFoodSheet = false }
                 )
             }
@@ -366,7 +386,7 @@ fun DailyFoodLogScreen(
                 sheetState = editFoodSheetState
             ) {
                 EditFoodSheetContent(
-                    viewModel = viewModel,
+                    viewModel = editFoodViewModel,
                     onDismiss = { showEditFoodSheet = false }
                 )
             }

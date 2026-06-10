@@ -39,7 +39,6 @@ class DeleteEntryTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var foodIntakeRepository: FoodIntakeRepository
-    private lateinit var foodRepository: FoodRepository
     private lateinit var calorieGoalRepository: CalorieGoalRepository
     private lateinit var viewModel: DailyFoodLogViewModel
 
@@ -77,14 +76,12 @@ class DeleteEntryTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         foodIntakeRepository = mockk(relaxed = true)
-        foodRepository = mockk(relaxed = true)
         calorieGoalRepository = mockk(relaxed = true)
 
         every { foodIntakeRepository.getEntriesForDate(any()) } returns entriesFlow
         every { calorieGoalRepository.getActiveGoal() } returns flowOf(null)
-        every { foodRepository.getAllFoods() } returns flowOf(listOf(testFood, testFood2))
 
-        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle(), Clock.systemDefaultZone())
+        viewModel = DailyFoodLogViewModel(foodIntakeRepository, calorieGoalRepository, SavedStateHandle(), Clock.systemDefaultZone())
     }
 
     @After
