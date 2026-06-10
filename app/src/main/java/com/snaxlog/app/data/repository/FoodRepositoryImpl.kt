@@ -10,6 +10,7 @@ import com.snaxlog.app.data.local.entity.RecipeIngredientWithFood
 import com.snaxlog.app.data.local.entity.RecipeWithIngredients
 import com.snaxlog.app.data.local.entity.ServingUnit
 import kotlinx.coroutines.flow.Flow
+import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
@@ -23,7 +24,8 @@ import kotlin.math.roundToInt
 class FoodRepositoryImpl @Inject constructor(
     private val foodDao: FoodDao,
     private val recipeIngredientDao: RecipeIngredientDao,
-    private val transactionRunner: TransactionRunner
+    private val transactionRunner: TransactionRunner,
+    private val clock: Clock
 ) : FoodRepository {
 
     // ============================
@@ -62,7 +64,7 @@ class FoodRepositoryImpl @Inject constructor(
         carbs: Double
     ): FoodEntity {
         val calories = FoodEntity.calculateCalories(protein, fat, carbs)
-        val now = System.currentTimeMillis()
+        val now = clock.millis()
 
         val food = FoodEntity(
             name = name.trim(),
@@ -101,7 +103,7 @@ class FoodRepositoryImpl @Inject constructor(
 
         // Calculate total nutrition from ingredients
         val nutrition = calculateRecipeNutrition(ingredients)
-        val now = System.currentTimeMillis()
+        val now = clock.millis()
 
         // Calculate per-serving values
         val caloriesPerServing = (nutrition.totalCalories / numberOfServings).roundToInt()
@@ -166,7 +168,7 @@ class FoodRepositoryImpl @Inject constructor(
         require(existing.foodType == FoodType.SIMPLE) { "Use updateRecipe for recipes" }
 
         val calories = FoodEntity.calculateCalories(protein, fat, carbs)
-        val now = System.currentTimeMillis()
+        val now = clock.millis()
 
         val updated = existing.copy(
             name = name.trim(),
@@ -204,7 +206,7 @@ class FoodRepositoryImpl @Inject constructor(
 
         // Calculate nutrition from ingredients
         val nutrition = calculateRecipeNutrition(ingredients)
-        val now = System.currentTimeMillis()
+        val now = clock.millis()
 
         // Calculate per-serving values
         val caloriesPerServing = (nutrition.totalCalories / numberOfServings).roundToInt()

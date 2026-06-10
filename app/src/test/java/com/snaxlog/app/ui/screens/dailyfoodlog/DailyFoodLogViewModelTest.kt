@@ -30,6 +30,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DailyFoodLogViewModelTest {
@@ -93,7 +94,8 @@ class DailyFoodLogViewModelTest {
             foodIntakeRepository = foodIntakeRepository,
             foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
-            savedStateHandle = savedStateHandle
+            savedStateHandle = savedStateHandle,
+            clock = Clock.systemDefaultZone()
         )
     }
 

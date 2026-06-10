@@ -24,6 +24,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
 
 /**
  * Focused tests for US-005: Search food database.
@@ -77,7 +78,7 @@ class SearchFoodTest {
         every { foodRepository.searchFoods("pizza") } returns flowOf(emptyList())
         every { foodRepository.searchFoods("!@#\$%") } returns flowOf(emptyList())
 
-        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle())
+        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle(), Clock.systemDefaultZone())
     }
 
     @After

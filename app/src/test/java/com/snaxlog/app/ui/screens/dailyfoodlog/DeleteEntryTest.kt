@@ -28,6 +28,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
 
 /**
  * Focused tests for US-004: Delete food intake entry.
@@ -83,7 +84,7 @@ class DeleteEntryTest {
         every { calorieGoalRepository.getActiveGoal() } returns flowOf(null)
         every { foodRepository.getAllFoods() } returns flowOf(listOf(testFood, testFood2))
 
-        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle())
+        viewModel = DailyFoodLogViewModel(foodIntakeRepository, foodRepository, calorieGoalRepository, SavedStateHandle(), Clock.systemDefaultZone())
     }
 
     @After

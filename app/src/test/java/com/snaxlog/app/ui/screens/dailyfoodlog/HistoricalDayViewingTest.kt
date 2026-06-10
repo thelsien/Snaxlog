@@ -34,6 +34,7 @@ import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.Clock
 
 /**
  * FIP-EPIC-005: Historical Day Viewing Tests
@@ -94,7 +95,8 @@ class HistoricalDayViewingTest {
             foodIntakeRepository = foodIntakeRepository,
             foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
-            savedStateHandle = savedStateHandle
+            savedStateHandle = savedStateHandle,
+            clock = Clock.systemDefaultZone()
         )
     }
 
@@ -243,7 +245,8 @@ class HistoricalDayViewingTest {
             foodIntakeRepository = foodIntakeRepository,
             foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
-            savedStateHandle = savedStateHandleWithDate
+            savedStateHandle = savedStateHandleWithDate,
+            clock = Clock.systemDefaultZone()
         )
 
         advanceUntilIdle()

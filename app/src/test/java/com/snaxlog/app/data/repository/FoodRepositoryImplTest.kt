@@ -21,6 +21,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
 
 class FoodRepositoryImplTest {
 
@@ -76,7 +77,7 @@ class FoodRepositoryImplTest {
         foodDao = mockk(relaxed = true)
         recipeIngredientDao = mockk(relaxed = true)
         transactionRunner = FakeTransactionRunner()
-        repository = FoodRepositoryImpl(foodDao, recipeIngredientDao, transactionRunner)
+        repository = FoodRepositoryImpl(foodDao, recipeIngredientDao, transactionRunner, Clock.systemDefaultZone())
     }
 
     // ============================================================

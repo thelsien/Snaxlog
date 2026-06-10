@@ -26,6 +26,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import java.time.Clock
 
 /**
  * Tests for EPIC-004: Visual Progress Indicators (US-012)
@@ -101,7 +102,8 @@ class VisualProgressIndicatorsTest {
             foodIntakeRepository = foodIntakeRepository,
             foodRepository = foodRepository,
             calorieGoalRepository = calorieGoalRepository,
-            savedStateHandle = SavedStateHandle()
+            savedStateHandle = SavedStateHandle(),
+            clock = Clock.systemDefaultZone()
         )
     }
 

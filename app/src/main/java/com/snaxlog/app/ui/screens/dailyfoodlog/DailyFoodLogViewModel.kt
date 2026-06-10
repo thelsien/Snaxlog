@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Clock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -150,12 +151,13 @@ class DailyFoodLogViewModel @Inject constructor(
     private val foodIntakeRepository: FoodIntakeRepository,
     private val foodRepository: FoodRepository,
     private val calorieGoalRepository: CalorieGoalRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val clock: Clock
 ) : ViewModel() {
 
     // FIP-EPIC-005: Use LocalDate for date management (EC-098: persisted in SavedStateHandle)
     private val _selectedDate = MutableStateFlow(
-        savedStateHandle.get<String>(KEY_SELECTED_DATE)?.let { LocalDate.parse(it) } ?: LocalDate.now()
+        savedStateHandle.get<String>(KEY_SELECTED_DATE)?.let { LocalDate.parse(it) } ?: LocalDate.now(clock)
     )
 
     // Current date string for database queries (yyyy-MM-dd format)
@@ -195,7 +197,7 @@ class DailyFoodLogViewModel @Inject constructor(
     private fun observeSelectedDate() {
         viewModelScope.launch {
             _selectedDate.collect { date ->
-                val today = LocalDate.now()
+                val today = LocalDate.now(clock)
                 val isToday = date == today
                 val canForward = date < today
 
@@ -314,7 +316,7 @@ class DailyFoodLogViewModel @Inject constructor(
      * If viewing a historical date, maintain that date (EC-098).
      */
     fun refreshDate() {
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         val currentSelected = _selectedDate.value
 
         // Only auto-update if we were viewing "today" and the day changed
@@ -336,7 +338,7 @@ class DailyFoodLogViewModel @Inject constructor(
      * @param date The date to navigate to
      */
     fun setSelectedDate(date: LocalDate) {
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         // EC-095, EC-123: Prevent future date selection
         val safeDate = if (date > today) today else date
         _selectedDate.value = safeDate
@@ -356,7 +358,7 @@ class DailyFoodLogViewModel @Inject constructor(
      */
     fun navigateToNextDay() {
         val current = _selectedDate.value
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         if (current < today) {
             _selectedDate.value = current.plusDays(1)
         }
@@ -366,7 +368,7 @@ class DailyFoodLogViewModel @Inject constructor(
      * FIP-EPIC-005 US-013: Quick return to today.
      */
     fun returnToToday() {
-        _selectedDate.value = LocalDate.now()
+        _selectedDate.value = LocalDate.now(clock)
     }
 
     /**
@@ -438,7 +440,7 @@ class DailyFoodLogViewModel @Inject constructor(
 
     fun openAddFood() {
         val targetDate = _selectedDate.value
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         val isHistorical = targetDate != today
 
         // FIP-005: Auto-select category based on current time
@@ -538,7 +540,7 @@ class DailyFoodLogViewModel @Inject constructor(
             try {
                 // FIP-EPIC-005 US-017: Use target date for historical entries (EC-122)
                 val targetDate = state.targetDate
-                val today = LocalDate.now()
+                val today = LocalDate.now(clock)
 
                 // EC-123: Defensive check to prevent future dates
                 val safeDate = if (targetDate > today) today else targetDate
@@ -547,7 +549,7 @@ class DailyFoodLogViewModel @Inject constructor(
                 // For historical entries, use a timestamp at the end of that day
                 // For today's entries, use current timestamp
                 val timestamp = if (safeDate == today) {
-                    System.currentTimeMillis()
+                    clock.millis()
                 } else {
                     // Use noon on the historical date for ordering purposes
                     safeDate.atTime(12, 0).toEpochSecond(java.time.ZoneOffset.UTC) * 1000
@@ -594,7 +596,7 @@ class DailyFoodLogViewModel @Inject constructor(
                     } catch (e: Exception) {
                         null
                     }
-                    val today = LocalDate.now()
+                    val today = LocalDate.now(clock)
                     val isHistorical = entryDate != null && entryDate != today
 
                     // FIP-005: Load existing meal category
@@ -765,7 +767,7 @@ class DailyFoodLogViewModel @Inject constructor(
      * Used for backward compatibility with existing queries.
      */
     private fun getCurrentDateString(): String {
-        return LocalDate.now().format(DATE_FORMATTER)
+        return LocalDate.now(clock).format(DATE_FORMATTER)
     }
 
     private fun roundToOneDecimal(value: Double): Double {
