@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.snaxlog.app.data.local.entity.FoodEntity
 import com.snaxlog.app.ui.components.EmptyStateView
+import com.snaxlog.app.ui.components.FoodTypeBadge
 import com.snaxlog.app.ui.components.MealCategorySelector
 import com.snaxlog.app.ui.components.NutritionPreview
 import com.snaxlog.app.ui.theme.SnaxlogThemeExtras
@@ -350,6 +351,7 @@ private fun CategoryHeaderRow(category: String) {
 /**
  * Individual food item row.
  * AC-049: Shows food name, standard serving size, and calories per serving.
+ * EPIC-006 US-020 AC-015-001: Shows badge for custom foods and recipes.
  */
 @Composable
 private fun FoodItemRow(
@@ -372,19 +374,33 @@ private fun FoodItemRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = food.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = food.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                // EPIC-006: Show badge for custom foods and recipes
+                if (food.isUserCreated) {
+                    Spacer(modifier = Modifier.width(Spacing.sm))
+                    FoodTypeBadge(
+                        foodType = food.foodType,
+                        showLabel = true
+                    )
+                }
+            }
             Text(
                 text = food.servingSize,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+        Spacer(modifier = Modifier.width(Spacing.sm))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = numberFormat.format(food.caloriesPerServing),
