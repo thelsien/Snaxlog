@@ -149,8 +149,28 @@ class FoodRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Updates an existing custom food.
+     * Updates an existing simple custom food and propagates the change to recipes.
      * US-021: Edit Custom Foods and Recipes
+     *
+     * A recipe's per-serving macros (caloriesPerServing, proteinPerServing,
+     * fatPerServing, carbsPerServing) are stored snapshots computed at recipe save
+     * time. Editing a simple custom food that is used as an ingredient would
+     * otherwise leave those stored macros stale. To keep recipes consistent, every
+     * recipe that uses [foodId] as an ingredient is recomputed and updated using the
+     * food's new nutrition values.
+     *
+     * Atomicity: the food update and all dependent recipe recomputes happen inside a
+     * single transaction (via the injected [transactionRunner]). The food row is
+     * updated first so the recompute reads the new values back from the database.
+     *
+     * Logged intake history is NEVER touched: entries in food_intake_entries remain
+     * snapshotted at the values that were current when they were logged, preserving
+     * an accurate historical record.
+     *
+     * Missing ingredients: if a dependent recipe contains an ingredient whose food row
+     * no longer exists, that ingredient is excluded from the recompute (matching
+     * [RecipeWithIngredients.calculateTotalNutrition] semantics) rather than causing a
+     * failure.
      */
     override suspend fun updateCustomFood(
         foodId: Long,
@@ -182,7 +202,11 @@ class FoodRepositoryImpl @Inject constructor(
             updatedAt = now
         )
 
-        foodDao.update(updated)
+        transactionRunner {
+            foodDao.update(updated)
+            recomputeRecipesUsingFood(foodId, now)
+        }
+
         return updated
     }
 
@@ -247,6 +271,14 @@ class FoodRepositoryImpl @Inject constructor(
      * Deletes a custom food or recipe.
      * US-022: Delete Custom Foods and Recipes
      * Note: Recipe ingredients are cascade deleted automatically.
+     *
+     * Intentional behavior: deleting a simple custom food does NOT recompute the
+     * recipes that used it as an ingredient. A recipe keeps its last-known-complete
+     * stored nutrition (computed while the ingredient still existed) rather than
+     * silently dropping the deleted ingredient's contribution. The recipe editor
+     * surfaces the missing ingredient to the user per EC-014-010, leaving the
+     * decision to re-save (and thereby recompute) in the user's hands. This differs
+     * from [updateCustomFood], which DOES propagate edits to dependent recipes.
      */
     override suspend fun deleteCustomFood(foodId: Long) {
         val food = foodDao.getFoodById(foodId)
@@ -335,6 +367,77 @@ class FoodRepositoryImpl @Inject constructor(
             require(food.foodType != FoodType.RECIPE) {
                 "Cannot add a recipe as an ingredient"
             }
+
+            val multiplier = ingredient.quantity
+            totalCalories += food.caloriesPerServing * multiplier
+            totalProtein += food.proteinPerServing * multiplier
+            totalFat += food.fatPerServing * multiplier
+            totalCarbs += food.carbsPerServing * multiplier
+        }
+
+        return RecipeNutritionTotals(totalCalories, totalProtein, totalFat, totalCarbs)
+    }
+
+    /**
+     * Recomputes and updates the stored per-serving macros of every recipe that uses
+     * [foodId] as an ingredient. Intended to be called from inside a transaction,
+     * AFTER the ingredient's food row has been updated, so it reads the new values.
+     *
+     * Unlike [calculateRecipeNutrition], missing ingredient foods are excluded from
+     * the totals (never throwing), matching
+     * [RecipeWithIngredients.calculateTotalNutrition] semantics — a deleted ingredient
+     * must not break propagation. Per-serving math mirrors createRecipe/updateRecipe:
+     * totals accumulate as exact Doubles and are divided by numberOfServings, with
+     * calories rounded to the nearest integer.
+     *
+     * @param foodId The ingredient food whose change triggered recomputation
+     * @param now Timestamp (from the injected Clock) applied to each recomputed recipe
+     */
+    private suspend fun recomputeRecipesUsingFood(foodId: Long, now: Long) {
+        val recipeIds = recipeIngredientDao.getRecipeIdsUsingFood(foodId)
+        for (recipeId in recipeIds) {
+            val recipe = foodDao.getFoodById(recipeId) ?: continue
+            if (recipe.foodType != FoodType.RECIPE) continue
+
+            val ingredients = recipeIngredientDao.getIngredientsForRecipeOnce(recipeId)
+            val nutrition = calculateRecipeNutritionExcludingMissing(ingredients)
+
+            // Existing recipes always set numberOfServings; fall back to 1.0 like
+            // RecipeWithIngredients.calculateTotalNutrition does.
+            val numberOfServings = recipe.numberOfServings ?: 1.0
+
+            val updatedRecipe = recipe.copy(
+                caloriesPerServing = (nutrition.totalCalories / numberOfServings).roundToInt(),
+                proteinPerServing = nutrition.totalProtein / numberOfServings,
+                fatPerServing = nutrition.totalFat / numberOfServings,
+                carbsPerServing = nutrition.totalCarbs / numberOfServings,
+                updatedAt = now
+            )
+            foodDao.update(updatedRecipe)
+        }
+    }
+
+    /**
+     * Calculates total nutrition for a recipe's ingredient rows, excluding any
+     * ingredient whose food row is missing (deleted). Totals are accumulated as exact
+     * Doubles, matching [calculateRecipeNutrition]; the only difference is that missing
+     * ingredients are skipped instead of throwing. Recipe-typed ingredients are also
+     * skipped defensively (recipes cannot contain recipes per EC-014-001).
+     */
+    private suspend fun calculateRecipeNutritionExcludingMissing(
+        ingredients: List<RecipeIngredientEntity>
+    ): RecipeNutritionTotals {
+        val foodIds = ingredients.map { it.ingredientFoodId }
+        val foods = foodDao.getFoodsByIds(foodIds).associateBy { it.id }
+
+        var totalCalories = 0.0
+        var totalProtein = 0.0
+        var totalFat = 0.0
+        var totalCarbs = 0.0
+
+        for (ingredient in ingredients) {
+            val food = foods[ingredient.ingredientFoodId] ?: continue
+            if (food.foodType == FoodType.RECIPE) continue
 
             val multiplier = ingredient.quantity
             totalCalories += food.caloriesPerServing * multiplier
