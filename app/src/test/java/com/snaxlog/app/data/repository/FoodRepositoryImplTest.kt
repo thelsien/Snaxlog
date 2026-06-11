@@ -446,6 +446,224 @@ class FoodRepositoryImplTest {
     }
 
     // ============================================================
+    // Recipe nutrition propagation on ingredient update
+    // ============================================================
+
+    private fun simpleCustomFood(
+        id: Long,
+        calories: Int,
+        protein: Double,
+        fat: Double,
+        carbs: Double
+    ) = FoodEntity(
+        id = id, name = "Ingredient $id", category = "Custom",
+        servingSize = "100 g", servingWeightGrams = 0.0,
+        caloriesPerServing = calories, proteinPerServing = protein,
+        fatPerServing = fat, carbsPerServing = carbs,
+        isUserCreated = true, foodType = FoodType.SIMPLE,
+        servingUnit = ServingUnit.GRAM, servingSizeValue = 100.0
+    )
+
+    private fun recipeFood(id: Long, numberOfServings: Double) = FoodEntity(
+        id = id, name = "Recipe $id", category = "Recipe",
+        servingSize = "1 serving", servingWeightGrams = 0.0,
+        caloriesPerServing = 0, proteinPerServing = 0.0,
+        fatPerServing = 0.0, carbsPerServing = 0.0,
+        isUserCreated = true, foodType = FoodType.RECIPE,
+        servingUnit = ServingUnit.SERVING, servingSizeValue = 1.0,
+        numberOfServings = numberOfServings
+    )
+
+    @Test
+    fun `updateCustomFood recomputes macros of all recipes using the food`() = runTest {
+        // Ingredient 100 (the food being edited) starts at old values.
+        val existingFood = simpleCustomFood(100, calories = 100, protein = 10.0, fat = 5.0, carbs = 10.0)
+        // A second ingredient, unchanged, shared by both recipes.
+        val otherIngredient = simpleCustomFood(101, calories = 50, protein = 2.0, fat = 1.0, carbs = 8.0)
+
+        // Recipe 200: uses food 100 x2 servings + food 101 x1; recipe yields 2 servings.
+        val recipe200 = recipeFood(200, numberOfServings = 2.0)
+        val recipe200Ingredients = listOf(
+            RecipeIngredientEntity(id = 1, recipeId = 200, ingredientFoodId = 100, quantity = 2.0, unit = ServingUnit.SERVING),
+            RecipeIngredientEntity(id = 2, recipeId = 200, ingredientFoodId = 101, quantity = 1.0, unit = ServingUnit.SERVING)
+        )
+
+        // Recipe 201: uses food 100 x1; recipe yields 1 serving.
+        val recipe201 = recipeFood(201, numberOfServings = 1.0)
+        val recipe201Ingredients = listOf(
+            RecipeIngredientEntity(id = 3, recipeId = 201, ingredientFoodId = 100, quantity = 1.0, unit = ServingUnit.SERVING)
+        )
+
+        coEvery { foodDao.getFoodById(100L) } returns existingFood
+        coEvery { recipeIngredientDao.getRecipeIdsUsingFood(100L) } returns listOf(200L, 201L)
+        coEvery { foodDao.getFoodById(200L) } returns recipe200
+        coEvery { foodDao.getFoodById(201L) } returns recipe201
+        coEvery { recipeIngredientDao.getIngredientsForRecipeOnce(200L) } returns recipe200Ingredients
+        coEvery { recipeIngredientDao.getIngredientsForRecipeOnce(201L) } returns recipe201Ingredients
+
+        // After the food row is updated to NEW values, recompute reads them back.
+        // New food 100: protein 20, fat 10, carbs 30 -> calories = 20*4 + 10*9 + 30*4 = 290.
+        val updatedFood100 = existingFood.copy(
+            caloriesPerServing = 290, proteinPerServing = 20.0, fatPerServing = 10.0, carbsPerServing = 30.0
+        )
+        coEvery { foodDao.getFoodsByIds(listOf(100L, 101L)) } returns listOf(updatedFood100, otherIngredient)
+        coEvery { foodDao.getFoodsByIds(listOf(100L)) } returns listOf(updatedFood100)
+
+        val recipeSlots = mutableListOf<FoodEntity>()
+        coEvery { foodDao.update(capture(recipeSlots)) } returns Unit
+
+        repository.updateCustomFood(
+            foodId = 100L,
+            name = "Edited Ingredient",
+            servingSizeValue = 100.0,
+            servingUnit = ServingUnit.GRAM,
+            protein = 20.0,
+            fat = 10.0,
+            carbs = 30.0
+        )
+
+        // First update is the food itself; remaining are recipes.
+        val updatedRecipe200 = recipeSlots.first { it.id == 200L }
+        val updatedRecipe201 = recipeSlots.first { it.id == 201L }
+
+        // Recipe 200 totals: food100 x2 -> cal 580, p40, f20, c60 ; food101 x1 -> cal 50, p2, f1, c8
+        // total: cal 630, p42, f21, c68 ; per serving (2): cal 315, p21, f10.5, c34
+        assertEquals(315, updatedRecipe200.caloriesPerServing)
+        assertEquals(21.0, updatedRecipe200.proteinPerServing, 0.001)
+        assertEquals(10.5, updatedRecipe200.fatPerServing, 0.001)
+        assertEquals(34.0, updatedRecipe200.carbsPerServing, 0.001)
+
+        // Recipe 201 totals: food100 x1 -> cal 290, p20, f10, c30 ; per serving (1): same.
+        assertEquals(290, updatedRecipe201.caloriesPerServing)
+        assertEquals(20.0, updatedRecipe201.proteinPerServing, 0.001)
+        assertEquals(10.0, updatedRecipe201.fatPerServing, 0.001)
+        assertEquals(30.0, updatedRecipe201.carbsPerServing, 0.001)
+    }
+
+    @Test
+    fun `updateCustomFood with no dependent recipes performs no recipe updates`() = runTest {
+        val existingFood = simpleCustomFood(100, calories = 100, protein = 10.0, fat = 5.0, carbs = 10.0)
+
+        coEvery { foodDao.getFoodById(100L) } returns existingFood
+        coEvery { recipeIngredientDao.getRecipeIdsUsingFood(100L) } returns emptyList()
+
+        val updateSlots = mutableListOf<FoodEntity>()
+        coEvery { foodDao.update(capture(updateSlots)) } returns Unit
+
+        repository.updateCustomFood(
+            foodId = 100L,
+            name = "Edited",
+            servingSizeValue = 100.0,
+            servingUnit = ServingUnit.GRAM,
+            protein = 15.0,
+            fat = 8.0,
+            carbs = 12.0
+        )
+
+        // Only the food itself was updated; no recipe rows touched.
+        assertEquals(1, updateSlots.size)
+        assertEquals(100L, updateSlots[0].id)
+        coVerify(exactly = 0) { recipeIngredientDao.getIngredientsForRecipeOnce(any()) }
+    }
+
+    @Test
+    fun `updateCustomFood updates food and recomputes recipes inside a single transaction`() = runTest {
+        val existingFood = simpleCustomFood(100, calories = 100, protein = 10.0, fat = 5.0, carbs = 10.0)
+        val recipe200 = recipeFood(200, numberOfServings = 1.0)
+        val recipe200Ingredients = listOf(
+            RecipeIngredientEntity(id = 1, recipeId = 200, ingredientFoodId = 100, quantity = 1.0, unit = ServingUnit.SERVING)
+        )
+
+        val updatedFood100 = existingFood.copy(
+            caloriesPerServing = 180, proteinPerServing = 15.0, fatPerServing = 8.0, carbsPerServing = 12.0
+        )
+
+        coEvery { foodDao.getFoodById(100L) } returns existingFood
+        coEvery { recipeIngredientDao.getRecipeIdsUsingFood(100L) } returns listOf(200L)
+        coEvery { foodDao.getFoodById(200L) } returns recipe200
+        coEvery { recipeIngredientDao.getIngredientsForRecipeOnce(200L) } returns recipe200Ingredients
+        coEvery { foodDao.getFoodsByIds(listOf(100L)) } returns listOf(updatedFood100)
+
+        val updatedInTransaction = mutableListOf<Boolean>()
+        coEvery { foodDao.update(any()) } coAnswers {
+            updatedInTransaction.add(transactionRunner.inTransaction)
+        }
+
+        repository.updateCustomFood(
+            foodId = 100L,
+            name = "Edited",
+            servingSizeValue = 100.0,
+            servingUnit = ServingUnit.GRAM,
+            protein = 15.0,
+            fat = 8.0,
+            carbs = 12.0
+        )
+
+        // One transaction wrapping both the food update and the recipe recompute.
+        assertEquals(1, transactionRunner.transactionCount)
+        assertEquals(2, updatedInTransaction.size)
+        assertTrue(updatedInTransaction.all { it })
+    }
+
+    @Test
+    fun `updateCustomFood recomputes recipe excluding a missing ingredient without throwing`() = runTest {
+        val existingFood = simpleCustomFood(100, calories = 100, protein = 10.0, fat = 5.0, carbs = 10.0)
+
+        // Recipe 200 uses food 100 (present) and food 999 (deleted/missing).
+        val recipe200 = recipeFood(200, numberOfServings = 1.0)
+        val recipe200Ingredients = listOf(
+            RecipeIngredientEntity(id = 1, recipeId = 200, ingredientFoodId = 100, quantity = 2.0, unit = ServingUnit.SERVING),
+            RecipeIngredientEntity(id = 2, recipeId = 200, ingredientFoodId = 999, quantity = 1.0, unit = ServingUnit.SERVING)
+        )
+
+        val updatedFood100 = existingFood.copy(
+            caloriesPerServing = 200, proteinPerServing = 12.0, fatPerServing = 6.0, carbsPerServing = 14.0
+        )
+
+        coEvery { foodDao.getFoodById(100L) } returns existingFood
+        coEvery { recipeIngredientDao.getRecipeIdsUsingFood(100L) } returns listOf(200L)
+        coEvery { foodDao.getFoodById(200L) } returns recipe200
+        coEvery { recipeIngredientDao.getIngredientsForRecipeOnce(200L) } returns recipe200Ingredients
+        // Missing food 999 not returned by getFoodsByIds.
+        coEvery { foodDao.getFoodsByIds(listOf(100L, 999L)) } returns listOf(updatedFood100)
+
+        val recipeSlots = mutableListOf<FoodEntity>()
+        coEvery { foodDao.update(capture(recipeSlots)) } returns Unit
+
+        repository.updateCustomFood(
+            foodId = 100L,
+            name = "Edited",
+            servingSizeValue = 100.0,
+            servingUnit = ServingUnit.GRAM,
+            protein = 12.0,
+            fat = 6.0,
+            carbs = 14.0
+        )
+
+        val updatedRecipe200 = recipeSlots.first { it.id == 200L }
+
+        // Only food 100 x2 counts (999 excluded): cal 400, p24, f12, c28 ; per serving (1): same.
+        assertEquals(400, updatedRecipe200.caloriesPerServing)
+        assertEquals(24.0, updatedRecipe200.proteinPerServing, 0.001)
+        assertEquals(12.0, updatedRecipe200.fatPerServing, 0.001)
+        assertEquals(28.0, updatedRecipe200.carbsPerServing, 0.001)
+    }
+
+    @Test
+    fun `deleteCustomFood does not recompute or update dependent recipes`() = runTest {
+        val customFood = simpleCustomFood(100, calories = 100, protein = 10.0, fat = 5.0, carbs = 10.0)
+        coEvery { foodDao.getFoodById(100L) } returns customFood
+
+        repository.deleteCustomFood(100L)
+
+        coVerify { foodDao.deleteById(100L) }
+        // Decision 3: dependent recipes are NOT recomputed on delete.
+        coVerify(exactly = 0) { recipeIngredientDao.getRecipeIdsUsingFood(any()) }
+        coVerify(exactly = 0) { recipeIngredientDao.getIngredientsForRecipeOnce(any()) }
+        coVerify(exactly = 0) { foodDao.update(any()) }
+    }
+
+    // ============================================================
     // EPIC-006: US-021 Update Recipe
     // ============================================================
 
